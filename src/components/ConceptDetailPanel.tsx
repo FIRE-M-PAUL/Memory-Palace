@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Link2, Quote, Lightbulb, HelpCircle } from "lucide-react";
+import { X, Link2, Quote, Lightbulb, HelpCircle, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,12 +8,17 @@ import type { Concept } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
 import { getClusterColor } from "@/types/memory-palace";
 import { resolveText } from "@/lib/multilingual";
+import {
+  getConnectionToCoreText,
+  getSummarizedPointsForIdea,
+} from "@/lib/guidedRoomLayout";
 import { simplifyTextForLevel } from "@/lib/relationshipHelpers";
 import { useAppStore } from "@/store/appStore";
 
 interface ConceptDetailPanelProps {
   concept: Concept;
   room: KnowledgeRoom;
+  coreTitle: string;
   onClose: () => void;
   onSelectConcept: (id: string) => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
@@ -22,6 +27,7 @@ interface ConceptDetailPanelProps {
 export function ConceptDetailPanel({
   concept,
   room,
+  coreTitle,
   onClose,
   onSelectConcept,
   onSelectConnection,
@@ -38,6 +44,13 @@ export function ConceptDetailPanel({
   const tip = concept.studyTip
     ? simplifyTextForLevel(resolveText(concept.studyTip, language), level)
     : undefined;
+
+  const connectsToMain = simplifyTextForLevel(
+    getConnectionToCoreText(room, concept, coreTitle, language),
+    level
+  );
+
+  const keyPoints = getSummarizedPointsForIdea(room, concept, language);
 
   const related = room.relationships
     .filter((r) => r.source === concept.id || r.target === concept.id)
@@ -86,6 +99,33 @@ export function ConceptDetailPanel({
           <h3 className="text-sm font-medium text-cyan-300 mb-2">{t.whyMatters}</h3>
           <p className="text-slate-400 text-sm">{why}</p>
         </section>
+
+        <section className="mb-5 glass rounded-xl p-3 border border-violet-500/15">
+          <h3 className="flex items-center gap-2 text-sm font-medium text-violet-200 mb-2">
+            <Target className="h-4 w-4" />
+            {t.connectsToMain}
+          </h3>
+          <p className="text-slate-300 text-sm">{connectsToMain}</p>
+          <p className="text-xs text-slate-500 mt-2">
+            {t.coreTopic}: <span className="text-violet-300">{coreTitle}</span>
+          </p>
+        </section>
+
+        {keyPoints.length > 0 && (
+          <section className="mb-5">
+            <h3 className="text-sm font-medium text-cyan-300 mb-2">{t.simplePoints}</h3>
+            <ul className="space-y-2">
+              {keyPoints.map((point) => (
+                <li
+                  key={point.slice(0, 40)}
+                  className="text-sm text-slate-400 pl-3 border-l-2 border-cyan-500/20"
+                >
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section className="mb-5">
           <h3 className="flex items-center gap-2 text-sm font-medium text-cyan-300 mb-3">

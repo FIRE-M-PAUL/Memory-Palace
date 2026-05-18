@@ -22,6 +22,7 @@ import { AskPalaceChat } from "@/components/AskPalaceChat";
 import { MemoryRoutePanel } from "@/components/MemoryRoutePanel";
 import { KnowledgeGraph2D } from "@/components/KnowledgeGraph2D";
 import { getRoomOrFallback } from "@/lib/roomStorage";
+import { buildGuidedLayout } from "@/lib/guidedRoomLayout";
 import { getDefaultRoomView, setDefaultRoomView } from "@/lib/progressStorage";
 import { resolveText } from "@/lib/multilingual";
 import { useAppStore } from "@/store/appStore";
@@ -59,9 +60,11 @@ export default function RoomPage() {
     setViewMode(getDefaultRoomView());
   }, [id]);
 
-  const selectedConcept = room?.concepts.find((c) => c.id === selectedId) ?? null;
-  const routeConceptIds =
-    room?.memoryRoute.map((s) => s.conceptId) ?? [];
+  const selectedConcept =
+    selectedId && room ? room.concepts.find((c) => c.id === selectedId) ?? null : null;
+  const routeConceptIds = room?.memoryRoute.map((s) => s.conceptId) ?? [];
+  const coreTitle =
+    room && language ? buildGuidedLayout(room, language).coreTitle : "";
 
   const setView = (mode: "3d" | "2d") => {
     setViewMode(mode);
@@ -197,6 +200,7 @@ export default function RoomPage() {
             room={room}
             ideaAId={connectionPair.a}
             ideaBId={connectionPair.b}
+            coreTitle={coreTitle}
             onClose={() => setConnectionPair(null)}
           />
         )}
@@ -204,6 +208,7 @@ export default function RoomPage() {
           <ConceptDetailPanel
             concept={selectedConcept}
             room={room}
+            coreTitle={coreTitle}
             onClose={() => setSelectedId(null)}
             onSelectConcept={setSelectedId}
             onSelectConnection={(a, b) => setConnectionPair({ a, b })}
