@@ -26,6 +26,8 @@ interface ConceptDetailPanelProps {
   canDiveDeeper?: boolean;
   onDiveDeeper?: () => void;
   layerDepth?: number;
+  /** Render inside mobile bottom sheet (no fixed sidebar chrome) */
+  embedded?: boolean;
 }
 
 export function ConceptDetailPanel({
@@ -38,6 +40,7 @@ export function ConceptDetailPanel({
   canDiveDeeper = false,
   onDiveDeeper,
   layerDepth = 0,
+  embedded = false,
 }: ConceptDetailPanelProps) {
   const { language, difficulty, t } = useAppStore();
 
@@ -78,8 +81,12 @@ export function ConceptDetailPanel({
         ? "Important idea"
         : "Supporting idea";
 
+  const shellClass = embedded
+    ? "flex flex-col w-full"
+    : "glass-strong w-full sm:w-96 border-l border-cyan-500/10 flex flex-col h-full max-h-[55vh] lg:max-h-none";
+
   return (
-    <aside className="glass-strong w-full sm:w-96 border-l border-cyan-500/10 flex flex-col h-full max-h-[55vh] lg:max-h-none">
+    <aside className={shellClass}>
       <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
         <Badge
           style={{
@@ -89,9 +96,17 @@ export function ConceptDetailPanel({
         >
           {concept.cluster}
         </Badge>
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
-          <X className="h-4 w-4" />
-        </Button>
+        {!embedded && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Close"
+            className="h-10 w-10"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       <ScrollArea className="flex-1 p-4">
         <p className="text-xs text-cyan-400/80 mb-1">{importanceLabel}</p>

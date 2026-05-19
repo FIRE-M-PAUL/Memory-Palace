@@ -6,8 +6,6 @@ import type { KnowledgeRoom } from "@/types/memory-palace";
 import { buildRoomRenderPlan } from "@/lib/roomRenderPlan";
 import { getPerformanceProfile } from "@/lib/performanceProfile";
 
-const CREATIVE_RADIUS = 6.2;
-const ROOM_RADIUS = 5.5;
 
 export function getMapModeForView(
   view: LearningViewMode,
@@ -31,8 +29,11 @@ export function getExploreMapMode(
 export function getConceptPositionForView(
   concept: Concept,
   view: LearningViewMode,
-  layout: GuidedLayout
+  layout: GuidedLayout,
+  profile = getPerformanceProfile()
 ): { x: number; y: number; z: number } {
+  const creativeRadius = profile.creativeRadius;
+  const roomRadius = profile.roomRadius;
   if (view === "explore") {
     return getConceptPosition(concept, "explore", layout);
   }
@@ -53,9 +54,9 @@ export function getConceptPositionForView(
     const angle = (idx / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;
     const lift = 0.8 + (concept.importance === "high" ? 0.6 : 0.3);
     return {
-      x: Math.cos(angle) * CREATIVE_RADIUS,
+      x: Math.cos(angle) * creativeRadius,
       y: lift + Math.sin(angle * 3) * 0.25,
-      z: Math.sin(angle) * CREATIVE_RADIUS,
+      z: Math.sin(angle) * creativeRadius,
     };
   }
 
@@ -65,9 +66,9 @@ export function getConceptPositionForView(
     const count = layout.mainIdeas.length;
     const angle = (idx / Math.max(count, 1)) * Math.PI * 2;
     return {
-      x: Math.cos(angle) * ROOM_RADIUS,
+      x: Math.cos(angle) * roomRadius,
       y: 0.55,
-      z: Math.sin(angle) * ROOM_RADIUS,
+      z: Math.sin(angle) * roomRadius,
     };
   }
 

@@ -20,7 +20,21 @@ export interface LayerRenderPlan {
   localRelationships: Relationship[];
 }
 
-const RING_BY_DEPTH = [4.8, 4.2, 3.5, 3];
+function ringByDepth(profile: PerformanceProfile): number[] {
+  const base = profile.isMobile
+    ? [5.6, 4.6, 3.8, 3.2]
+    : profile.viewport === "tablet"
+      ? [5.2, 4.4, 3.6, 3]
+      : [4.8, 4.2, 3.5, 3];
+  return base;
+}
+
+function scalePosition(
+  pos: { x: number; y: number; z: number },
+  scale: number
+): { x: number; y: number; z: number } {
+  return { x: pos.x * scale, y: pos.y, z: pos.z * scale };
+}
 
 function importanceScore(c: Concept): number {
   return c.importance === "high" ? 2 : c.importance === "medium" ? 1 : 0;
@@ -38,8 +52,8 @@ export function getConceptLimitForDepth(
   profile: PerformanceProfile
 ): number {
   if (depth <= 0) return profile.maxMainIdeas;
-  if (depth === 1) return Math.min(8, profile.maxExpandedConcepts);
-  return Math.min(6, profile.isMobile ? 4 : 6);
+  if (depth === 1) return profile.maxExpandedConcepts;
+  return profile.isMobile ? 4 : 6;
 }
 
 export function createRootLayerFrame(
@@ -141,19 +155,20 @@ function computeLayerPositions(
   concepts: Concept[],
   view: LearningViewMode,
   layout: GuidedLayout,
-  depth: number
+  depth: number,
+  profile: PerformanceProfile
 ): Map<string, { x: number; y: number; z: number }> {
   const positions = new Map<string, { x: number; y: number; z: number }>();
-  const radius = RING_BY_DEPTH[Math.min(depth, RING_BY_DEPTH.length - 1)];
+  const rings = ringByDepth(profile);
+  const radius = rings[Math.min(depth, rings.length - 1)];
   const count = concepts.length;
 
   concepts.forEach((concept, i) => {
     if (depth === 0) {
       const ring = layout.simplePositions.get(concept.id);
-      positions.set(
-        concept.id,
-        ring ?? getConceptPositionForView(concept, view, layout)
-      );
+      const raw =
+        ring ?? getConceptPositionForView(concept, view, layout, profile);
+      positions.set(concept.id, scalePosition(raw, profile.ringScale));
       return;
     }
     const angle = (i / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2;
@@ -217,7 +232,13 @@ export function buildLayerRenderPlan(
   }
 
   const visibleIds = new Set(visibleConcepts.map((c) => c.id));
-  const positionCache = computeLayerPositions(visibleConcepts, view, layout, depth);
+  const positionCache = computeLayerPositions(
+    visibleConcepts,
+    view,
+    layout,
+    depth,
+    profile
+  );
 
   const localRelationships = filterLocalRelationships(
     room.relationships,

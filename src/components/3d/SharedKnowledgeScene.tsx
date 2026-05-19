@@ -27,20 +27,24 @@ import {
   getCachedGuidedLayout,
   getCachedLayerRenderPlan,
 } from "@/lib/roomComputeCache";
-import { getPerformanceProfile, type PerformanceProfile } from "@/lib/performanceProfile";
+import type { PerformanceProfile } from "@/lib/performanceProfile";
 import type { LayerStack } from "@/types/nested-worlds";
 import { useAppStore } from "@/store/appStore";
+import { useViewport } from "@/hooks/useViewport";
+import { MobileSceneToolbar } from "@/components/3d/MobileSceneToolbar";
 
 interface SceneProps {
   room: KnowledgeRoom;
   selectedId: string | null;
   onSelectConcept: (id: string | null) => void;
   onConceptActivate: (conceptId: string) => void;
+  onConceptDive?: (conceptId: string) => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
   view: LearningViewMode;
   layout: GuidedLayout;
   layerStack: LayerStack;
   profile: PerformanceProfile;
+  focusCameraTrigger?: number;
 }
 
 const CoreConnectionLines = memo(function CoreConnectionLines({
@@ -200,11 +204,13 @@ const SceneContent = memo(function SceneContent({
   selectedId,
   onSelectConcept,
   onConceptActivate,
+  onConceptDive,
   onSelectConnection,
   view,
   layout,
   layerStack,
   profile,
+  focusCameraTrigger = 0,
 }: SceneProps) {
   const { language } = useAppStore();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -258,8 +264,10 @@ const SceneContent = memo(function SceneContent({
     return p ? new THREE.Vector3(p.x, p.y, p.z) : null;
   }, [focusId, positionCache]);
 
-  const showPedestals = view === "explore" || view === "room";
-  const showFloor = view === "room" || view === "explore";
+  const showPedestals =
+    profile.showPedestals && (view === "explore" || view === "room");
+  const showFloor =
+    profile.showDecorFloor && (view === "room" || view === "explore");
   const orbitActive =
     view === "focus" && layerDepth === 0 && !focusId && profile.enableOrbitSpin;
 
@@ -301,10 +309,18 @@ const SceneContent = memo(function SceneContent({
           highlighted={hoveredId === concept.id && !isSelected}
           dimmed={dimmed}
           profile={profile}
-          onClick={() => {
+          onSelect={() => {
             onSelectConcept(concept.id);
             onConceptActivate(concept.id);
           }}
+          onDive={
+            onConceptDive
+              ? () => {
+                  onSelectConcept(concept.id);
+                  onConceptDive(concept.id);
+                }
+              : undefined
+          }
           onHover={(h) => handleHover(concept.id, h)}
         />
       );
@@ -318,13 +334,17 @@ const SceneContent = memo(function SceneContent({
     profile,
     onSelectConcept,
     onConceptActivate,
+    onConceptDive,
     handleHover,
   ]);
 
   return (
     <>
       <color attach="background" args={[bg]} />
-      <fog attach="fog" args={[bg, 14, view === "creative" ? 38 : 30]} />
+      <fog
+        attach="fog"
+        args={[bg, 12, view === "creative" ? profile.fogFar + 8 : profile.fogFar]}
+      />
       <SceneLighting />
 
       {view !== "creative" && profile.starCount > 0 && (
@@ -351,12 +371,12 @@ const SceneContent = memo(function SceneContent({
       {showFloor && (
         <>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
-            <circleGeometry args={[9, profile.floorSegments]} />
+            <circleGeometry args={[profile.floorRadius, profile.floorSegments]} />
             <meshStandardMaterial color="#0f172a" metalness={0.15} roughness={0.9} />
           </mesh>
-          {view === "room" && (
+          {view === "room" && !profile.isMobile && (
             <mesh position={[0, 0.2, 0]}>
-              <cylinderGeometry args={[1.2, 1.4, 0.25, 16]} />
+              <cylinderGeometry args={[1.2, 1.4, 0.25, 12]} />
               <meshStandardMaterial
                 color="#422006"
                 emissive="#78350f"
@@ -394,6 +414,8 @@ const SceneContent = memo(function SceneContent({
         focusPosition={focusPosition}
         active={!!focusId}
         controlsRef={controlsRef}
+        profile={profile}
+        forceFocus={focusCameraTrigger > 0}
       />
 
       <CoreConnectionLines
@@ -423,14 +445,22 @@ const SceneContent = memo(function SceneContent({
 
       <OrbitControls
         ref={controlsRef}
-        enablePan
+        enablePan={profile.enablePan}
         enableZoom
         enableRotate
         enableDamping
-        dampingFactor={0.08}
-        minDistance={focusId ? 3 : 5}
-        maxDistance={focusId ? 14 : view === "creative" ? 22 : 20}
-        maxPolarAngle={Math.PI / 1.85}
+        dampingFactor={profile.orbitDamping}
+        rotateSpeed={profile.rotateSpeed}
+        minDistance={profile.orbitMinDistance}
+        maxDistance={
+          focusId
+            ? profile.orbitMaxDistanceFocused
+            : view === "creative"
+              ? profile.orbitMaxDistance + 2
+              : profile.orbitMaxDistance
+        }
+        maxPolarAngle={Math.PI / (profile.isMobile ? 2.05 : 1.85)}
+        minPolarAngle={profile.isMobile ? 0.35 : 0.2}
       />
     </>
   );
@@ -448,6 +478,8 @@ export interface KnowledgeCanvasProps {
   transitioning?: boolean;
   hint: string;
   onReset: () => void;
+  onConceptDive?: (conceptId: string) => void;
+  onSwitch2d?: () => void;
 }
 
 export function KnowledgeCanvas({
@@ -455,6 +487,7 @@ export function KnowledgeCanvas({
   selectedId,
   onSelectConcept,
   onConceptActivate,
+  onConceptDive,
   onSelectConnection,
   view,
   layerStack,
@@ -462,9 +495,11 @@ export function KnowledgeCanvas({
   transitioning = false,
   hint,
   onReset,
+  onSwitch2d,
 }: KnowledgeCanvasProps) {
   const { language, t } = useAppStore();
-  const profile = useMemo(() => getPerformanceProfile(), []);
+  const { profile, isMobile } = useViewport();
+  const [focusCameraTrigger, setFocusCameraTrigger] = useState(0);
 
   const layout = useMemo(
     () => getCachedGuidedLayout(room, language),
@@ -473,12 +508,15 @@ export function KnowledgeCanvas({
 
   const handleReset = useCallback(() => {
     onReset();
+    setFocusCameraTrigger((n) => n + 1);
   }, [onReset]);
 
   const cameraPosition = useMemo((): [number, number, number] => {
-    if (view === "creative") return [0, 5.5, 13];
-    return [0, 4, 11];
-  }, [view]);
+    if (view === "creative" && !profile.isMobile) {
+      return [0, 5.5, 13];
+    }
+    return profile.cameraDefault;
+  }, [view, profile]);
 
   return (
     <div className="w-full h-full min-h-[420px] rounded-2xl overflow-hidden border border-cyan-500/10 flex flex-col">
@@ -496,9 +534,9 @@ export function KnowledgeCanvas({
         }`}
       >
         <Canvas
-          key={`${room.id}-${layerKey}`}
+          key={`${room.id}-${layerKey}-${profile.viewport}`}
           dpr={profile.dpr}
-          camera={{ position: cameraPosition, fov: 52 }}
+          camera={{ position: cameraPosition, fov: profile.cameraFov }}
           gl={{
             antialias: !profile.isMobile,
             alpha: true,
@@ -512,16 +550,28 @@ export function KnowledgeCanvas({
               selectedId={selectedId}
               onSelectConcept={onSelectConcept}
               onConceptActivate={onConceptActivate}
+              onConceptDive={onConceptDive}
               onSelectConnection={onSelectConnection}
               view={view}
               layout={layout}
               layerStack={layerStack}
               profile={profile}
+              focusCameraTrigger={focusCameraTrigger}
             />
           </Suspense>
         </Canvas>
+        {isMobile && onSwitch2d && (
+          <MobileSceneToolbar
+            hasSelection={!!selectedId}
+            onResetView={handleReset}
+            onFocusSelected={() => setFocusCameraTrigger((n) => n + 1)}
+            onSwitch2d={onSwitch2d}
+          />
+        )}
       </div>
-      <p className="text-xs text-slate-500 text-center py-2 px-3">{hint}</p>
+      <p className="text-xs text-slate-500 text-center py-2 px-3">
+        {isMobile ? t.mobileSceneHint : hint}
+      </p>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import type { Concept } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
 import { getClusterColor } from "@/types/memory-palace";
@@ -11,7 +11,7 @@ import {
   getCachedGuidedLayout,
   getCachedLayerRenderPlan,
 } from "@/lib/roomComputeCache";
-import { getPerformanceProfile } from "@/lib/performanceProfile";
+import { useViewport } from "@/hooks/useViewport";
 import type { LearningViewMode } from "@/types/learning-views";
 import type { LayerStack } from "@/types/nested-worlds";
 
@@ -20,6 +20,7 @@ interface KnowledgeGraph2DProps {
   selectedId: string | null;
   onSelectConcept: (id: string) => void;
   onConceptActivate: (conceptId: string) => void;
+  onConceptDive?: (conceptId: string) => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
   showStudyPath?: boolean;
   routeConceptIds?: string[];
@@ -39,6 +40,7 @@ export function KnowledgeGraph2D({
   selectedId,
   onSelectConcept,
   onConceptActivate,
+  onConceptDive,
   onSelectConnection,
   showStudyPath = false,
   routeConceptIds = [],
@@ -47,7 +49,33 @@ export function KnowledgeGraph2D({
   transitioning = false,
 }: KnowledgeGraph2DProps) {
   const { language, t } = useAppStore();
-  const profile = useMemo(() => getPerformanceProfile(), []);
+  const { profile } = useViewport();
+  const lastTapRef = useRef<{ id: string; t: number } | null>(null);
+
+  const handleNodeTap = useCallback(
+    (conceptId: string) => {
+      const now = Date.now();
+      if (profile.mobileTouchSelectOnly && onConceptDive) {
+        if (
+          lastTapRef.current?.id === conceptId &&
+          now - lastTapRef.current.t < 380
+        ) {
+          onSelectConcept(conceptId);
+          onConceptDive(conceptId);
+          lastTapRef.current = null;
+        } else {
+          onSelectConcept(conceptId);
+          onConceptActivate(conceptId);
+          lastTapRef.current = { id: conceptId, t: now };
+        }
+        return;
+      }
+      onSelectConcept(conceptId);
+      onConceptActivate(conceptId);
+      onConceptDive?.(conceptId);
+    },
+    [profile.mobileTouchSelectOnly, onConceptDive, onSelectConcept, onConceptActivate]
+  );
 
   const layout = useMemo(
     () => getCachedGuidedLayout(room, language),
@@ -181,18 +209,12 @@ export function KnowledgeGraph2D({
             <g
               key={concept.id}
               transform={`translate(${pos.x}, ${pos.y})`}
-              onClick={() => {
-                onSelectConcept(concept.id);
-                onConceptActivate(concept.id);
-              }}
-              className="cursor-pointer"
+              onClick={() => handleNodeTap(concept.id)}
+              className="cursor-pointer touch-manipulation"
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onSelectConcept(concept.id);
-                  onConceptActivate(concept.id);
-                }
+                if (e.key === "Enter") handleNodeTap(concept.id);
               }}
             >
               <circle

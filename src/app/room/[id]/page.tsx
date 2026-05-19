@@ -21,7 +21,9 @@ import { IdeaDetailPanel } from "@/components/IdeaDetailPanel";
 import { StudyPathPanel } from "@/components/StudyPathPanel";
 import { ViewSelector } from "@/components/ViewSelector";
 import { LayerBreadcrumbs } from "@/components/LayerBreadcrumbs";
+import { MobileBottomSheet } from "@/components/mobile/MobileBottomSheet";
 import { useLearningLayers } from "@/hooks/useLearningLayers";
+import { useViewport } from "@/hooks/useViewport";
 import { getRoomOrFallback } from "@/lib/roomStorage";
 import {
   getDefaultRoomView,
@@ -103,6 +105,8 @@ export default function RoomPage() {
     navigateToLayer,
   } = useLearningLayers(room, language);
 
+  const { isMobile } = useViewport();
+
   const recommendation = useMemo(
     () => (room ? recommendLearningView(room, studyStyle) : null),
     [room, studyStyle]
@@ -113,7 +117,12 @@ export default function RoomPage() {
   const routeConceptIds = room?.memoryRoute.map((s) => s.conceptId) ?? [];
   const coreTitle = currentFrame?.title ?? "";
 
-  const handleConceptActivate = useCallback(
+  const handleConceptSelect = useCallback((conceptId: string) => {
+    setSelectedId(conceptId);
+    setConnectionPair(null);
+  }, []);
+
+  const handleConceptDive = useCallback(
     (conceptId: string) => {
       setSelectedId(conceptId);
       setConnectionPair(null);
@@ -268,7 +277,7 @@ export default function RoomPage() {
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-        <div className="flex-1 p-4 min-h-[50vh] flex flex-col gap-4">
+        <div className="flex-1 p-2 sm:p-4 min-h-[min(58vh,520px)] flex flex-col gap-2 sm:gap-4">
           {layerStack.length > 0 && renderMode === "3d" ? (
             <KnowledgeRoom3D
               room={room}
@@ -277,7 +286,9 @@ export default function RoomPage() {
               layerStack={layerStack}
               layerKey={layerKey}
               transitioning={layerTransitioning}
-              onConceptActivate={handleConceptActivate}
+              onConceptActivate={handleConceptSelect}
+              onConceptDive={handleConceptDive}
+              onSwitch2d={() => setRender("2d")}
               onSelectConcept={(cid) => {
                 setSelectedId(cid);
                 setConnectionPair(null);
@@ -296,7 +307,8 @@ export default function RoomPage() {
               learningView={learningView}
               layerStack={layerStack}
               transitioning={layerTransitioning}
-              onConceptActivate={handleConceptActivate}
+              onConceptActivate={handleConceptSelect}
+              onConceptDive={handleConceptDive}
               onSelectConcept={(cid) => {
                 setSelectedId(cid);
                 setConnectionPair(null);
@@ -328,6 +340,39 @@ export default function RoomPage() {
         )}
 
         {connectionPair && (
+          <div className="hidden lg:block">
+            <ConnectionExplanationPanel
+              room={room}
+              ideaAId={connectionPair.a}
+              ideaBId={connectionPair.b}
+              coreTitle={coreTitle}
+              onClose={() => setConnectionPair(null)}
+            />
+          </div>
+        )}
+        {selectedConcept && !connectionPair && (
+          <div className="hidden lg:block">
+            <IdeaDetailPanel
+              concept={selectedConcept}
+              room={room}
+              coreTitle={coreTitle}
+              layerDepth={layerDepth}
+              canDiveDeeper={canDiveIntoConcept(selectedConcept.id)}
+              onDiveDeeper={() => handleConceptDive(selectedConcept.id)}
+              onClose={() => setSelectedId(null)}
+              onSelectConcept={setSelectedId}
+              onSelectConnection={(a, b) => setConnectionPair({ a, b })}
+            />
+          </div>
+        )}
+      </div>
+
+      {isMobile && connectionPair && (
+        <MobileBottomSheet
+          open
+          onClose={() => setConnectionPair(null)}
+          title={t.connectionType}
+        >
           <ConnectionExplanationPanel
             room={room}
             ideaAId={connectionPair.a}
@@ -335,21 +380,29 @@ export default function RoomPage() {
             coreTitle={coreTitle}
             onClose={() => setConnectionPair(null)}
           />
-        )}
-        {selectedConcept && !connectionPair && (
+        </MobileBottomSheet>
+      )}
+
+      {isMobile && selectedConcept && !connectionPair && (
+        <MobileBottomSheet
+          open
+          onClose={() => setSelectedId(null)}
+          title={resolveText(selectedConcept.title, language)}
+        >
           <IdeaDetailPanel
+            embedded
             concept={selectedConcept}
             room={room}
             coreTitle={coreTitle}
             layerDepth={layerDepth}
             canDiveDeeper={canDiveIntoConcept(selectedConcept.id)}
-            onDiveDeeper={() => handleConceptActivate(selectedConcept.id)}
+            onDiveDeeper={() => handleConceptDive(selectedConcept.id)}
             onClose={() => setSelectedId(null)}
             onSelectConcept={setSelectedId}
             onSelectConnection={(a, b) => setConnectionPair({ a, b })}
           />
-        )}
-      </div>
+        </MobileBottomSheet>
+      )}
 
       <div className="border-t border-slate-800 p-4">
         <Tabs defaultValue="ask" className="mx-auto max-w-[1600px]">

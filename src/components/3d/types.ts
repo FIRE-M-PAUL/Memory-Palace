@@ -14,4 +14,6 @@ export interface KnowledgeViewProps {
   layerKey: string;
   transitioning?: boolean;
   onConceptActivate: (conceptId: string) => void;
+  onConceptDive?: (conceptId: string) => void;
+  onSwitch2d?: () => void;
 }

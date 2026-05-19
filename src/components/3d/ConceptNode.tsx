@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { Concept } from "@/types/learning";
@@ -10,6 +10,8 @@ import { resolveText } from "@/lib/multilingual";
 import { useAppStore } from "@/store/appStore";
 import type { PerformanceProfile } from "@/lib/performanceProfile";
 
+const DOUBLE_TAP_MS = 380;
+
 interface ConceptNodeProps {
   concept: Concept;
   position: { x: number; y: number; z: number };
@@ -17,7 +19,8 @@ interface ConceptNodeProps {
   hovered: boolean;
   highlighted: boolean;
   dimmed: boolean;
-  onClick: () => void;
+  onSelect: () => void;
+  onDive?: () => void;
   onHover: (hovered: boolean) => void;
   profile: PerformanceProfile;
 }
@@ -29,19 +32,23 @@ function ConceptNodeInner({
   hovered,
   highlighted,
   dimmed,
-  onClick,
+  onSelect,
+  onDive,
   onHover,
   profile,
 }: ConceptNodeProps) {
   const language = useAppStore((s) => s.language);
   const meshRef = useRef<THREE.Mesh>(null);
+  const lastTapRef = useRef(0);
   const color = getClusterColor(concept.cluster);
   const segments = profile.sphereSegments;
-  const scale =
+  const baseScale =
     concept.importance === "high" ? 0.38 : concept.importance === "medium" ? 0.3 : 0.24;
+  const scale = profile.isMobile ? baseScale * 1.15 : baseScale;
   const active = selected || hovered || highlighted;
-  const showLabel = profile.labelMode === "all" || active;
+  const showLabel = profile.labelMode === "all" || (profile.isMobile ? selected : active);
   const shouldFloat = profile.enableNodeFloat && (active || selected) && !dimmed;
+  const hitScale = scale * profile.nodeHitScale;
 
   useFrame((state) => {
     if (!shouldFloat || !meshRef.current) return;
@@ -49,64 +56,98 @@ function ConceptNodeInner({
       position.y + Math.sin(state.clock.elapsedTime * 0.45 + concept.id.length) * 0.035;
   });
 
+  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    if (dimmed) return;
+
+    const now = Date.now();
+    if (profile.mobileTouchSelectOnly && onDive) {
+      if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+        onDive();
+        lastTapRef.current = 0;
+      } else {
+        onSelect();
+        lastTapRef.current = now;
+      }
+      return;
+    }
+
+    onSelect();
+    onDive?.();
+    lastTapRef.current = now;
+  };
+
   const opacity = dimmed ? 0.1 : active ? 0.92 : 0.72;
   const emissive = dimmed ? 0.08 : active ? 1.1 : 0.5;
 
   return (
     <group position={[position.x, position.y, position.z]}>
+      {/* Large invisible hit target for touch */}
       <mesh
-        ref={meshRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!dimmed) onClick();
-        }}
+        onPointerUp={handlePointerUp}
         onPointerOver={(e) => {
           if (dimmed) return;
           e.stopPropagation();
           onHover(true);
-          document.body.style.cursor = "pointer";
+          if (!profile.isMobile) document.body.style.cursor = "pointer";
         }}
         onPointerOut={() => {
           onHover(false);
           document.body.style.cursor = "auto";
         }}
-        scale={active ? scale * 1.28 : scale}
+        scale={hitScale}
         frustumCulled
       >
+        <sphereGeometry args={[1, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
+      <mesh ref={meshRef} scale={active ? scale * 1.22 : scale} frustumCulled>
         <sphereGeometry args={[1, segments, segments]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
           emissiveIntensity={emissive}
-          metalness={0.75}
-          roughness={0.25}
+          metalness={profile.isMobile ? 0.5 : 0.75}
+          roughness={profile.isMobile ? 0.4 : 0.25}
           transparent={dimmed}
           opacity={opacity}
         />
       </mesh>
-      {active && !dimmed && (
+
+      {active && !dimmed && !profile.isMobile && (
         <mesh scale={scale * 1.65} frustumCulled>
-          <sphereGeometry args={[1, 12, 12]} />
+          <sphereGeometry args={[1, 10, 10]} />
           <meshBasicMaterial color={color} transparent opacity={0.12} />
         </mesh>
       )}
+
       {showLabel && !dimmed && (
         <Html
-          position={[0, scale + 0.4, 0]}
+          position={[0, scale + (profile.isMobile ? 0.55 : 0.4), 0]}
           center
-          distanceFactor={14}
+          distanceFactor={profile.isMobile ? 10 : 14}
           style={{ pointerEvents: "none", userSelect: "none" }}
         >
           <div
-            className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap backdrop-blur-sm border ${
+            className={`rounded-xl font-medium backdrop-blur-md border max-w-[min(92vw,200px)] text-center leading-snug ${
+              profile.isMobile
+                ? "px-3 py-2 text-sm"
+                : "px-2 py-1 text-xs whitespace-nowrap"
+            } ${
               selected
-                ? "bg-cyan-500/30 border-cyan-400/60 text-cyan-50"
+                ? "bg-cyan-500/35 border-cyan-400/60 text-cyan-50 shadow-lg shadow-cyan-500/20"
                 : highlighted
                   ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-100"
-                  : "bg-slate-900/85 border-slate-600/50 text-slate-300"
+                  : "bg-slate-900/90 border-slate-600/50 text-slate-300"
             }`}
           >
             {resolveText(concept.title, language)}
+            {profile.isMobile && selected && onDive && (
+              <p className="text-[10px] text-cyan-200/80 mt-1 font-normal">
+                Double-tap to explore
+              </p>
+            )}
           </div>
         </Html>
       )}

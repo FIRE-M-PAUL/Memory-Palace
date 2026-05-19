@@ -147,6 +147,8 @@ export const en = {
   showMoreIdeas: "Show More Ideas",
   showFewerIdeas: "Show Fewer Ideas",
   resetView: "Reset View",
+  focusSelectedIdea: "Focus idea",
+  mobileSceneHint: "Tap an idea to learn. Double-tap to explore deeper.",
   focusIdea: "Focus on Selected Idea",
   showStudyPath: "Show Study Path",
   explainConnections: "Explain Connections",

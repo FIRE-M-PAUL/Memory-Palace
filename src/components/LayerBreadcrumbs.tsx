@@ -31,7 +31,7 @@ export const LayerBreadcrumbs = memo(function LayerBreadcrumbs({
         type="button"
         size="sm"
         variant="ghost"
-        className="h-8 gap-1 text-cyan-300"
+        className="h-10 min-h-[44px] gap-1 text-cyan-300"
         onClick={onRoot}
         disabled={stack.length <= 1}
       >
@@ -39,7 +39,13 @@ export const LayerBreadcrumbs = memo(function LayerBreadcrumbs({
         <span className="hidden sm:inline">{t.backToMainTopic}</span>
       </Button>
       {canGoBack && (
-        <Button type="button" size="sm" variant="outline" className="h-8 gap-1" onClick={onBack}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-10 min-h-[44px] gap-1"
+          onClick={onBack}
+        >
           <ArrowLeft className="h-3.5 w-3.5" />
           {t.previousLayer}
         </Button>

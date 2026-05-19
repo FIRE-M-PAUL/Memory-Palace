@@ -10,6 +10,8 @@ export interface KnowledgeRoom3DProps {
   selectedId: string | null;
   onSelectConcept: (id: string | null) => void;
   onConceptActivate: (conceptId: string) => void;
+  onConceptDive?: (conceptId: string) => void;
+  onSwitch2d?: () => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
   showStudyPath?: boolean;
   routeConceptIds?: string[];

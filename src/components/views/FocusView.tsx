@@ -4,31 +4,15 @@ import { KnowledgeCanvas } from "@/components/3d/SharedKnowledgeScene";
 import type { KnowledgeViewProps } from "@/components/3d/types";
 import { useAppStore } from "@/store/appStore";
 
-export function FocusView({
-  room,
-  selectedId,
-  onSelectConcept,
-  onSelectConnection,
-  layerStack,
-  layerKey,
-  transitioning,
-  onConceptActivate,
-}: KnowledgeViewProps) {
+export function FocusView(props: KnowledgeViewProps) {
   const t = useAppStore((s) => s.t);
 
   return (
     <KnowledgeCanvas
-      room={room}
-      selectedId={selectedId}
-      onSelectConcept={onSelectConcept}
-      onConceptActivate={onConceptActivate}
-      onSelectConnection={onSelectConnection}
+      {...props}
       view="focus"
-      layerStack={layerStack}
-      layerKey={layerKey}
-      transitioning={transitioning}
       hint={t.focusViewHint}
-      onReset={() => onSelectConcept(null)}
+      onReset={() => props.onSelectConcept(null)}
     />
   );
 }
