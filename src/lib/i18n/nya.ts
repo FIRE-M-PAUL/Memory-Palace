@@ -3,7 +3,8 @@ type T = { [K in keyof import("./en").TranslationKeys]: string };
 export const nya: Partial<T> & { appName: string } = {
   appName: "MEMORY PALACE",
   tagline: "Sinthani chidziwitso kukhala malo omwe mungayende.",
-  taglineSub: "Kuphunzira m'malo ndi zilankhulo kuyambira Giredi 1 mpaka Yunivesite.",
+  taglineSub:
+    "Sinthani zolemba zanu kukhala mapu ophuzira. Kwa aliyense amene akufuna kuphunzira.",
   enterPalace: "Lowani mu Palace",
   launchDemo: "Yambitsani Demo",
   dashboard: "Dashboard",
@@ -11,7 +12,7 @@ export const nya: Partial<T> & { appName: string } = {
   create: "Pangani",
   settings: "Zokonda",
   language: "Chilankhulo",
-  level: "Giredi",
+  difficulty: "Mulingo wophunzira",
   welcome: "Takulandilaninso, Wophunzira",
   savedRooms: "Mapalace anu",
   builtInLessons: "Maphunziro omwe alipo",

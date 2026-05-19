@@ -12,23 +12,12 @@ export type MultilingualText = {
 
 export type Importance = "high" | "medium" | "low";
 
-export type EducationLevel =
-  | "grade-1"
-  | "grade-2"
-  | "grade-3"
-  | "grade-4"
-  | "grade-5"
-  | "grade-6"
-  | "grade-7"
-  | "grade-8"
-  | "grade-9"
-  | "grade-10"
-  | "grade-11"
-  | "grade-12"
-  | "university-year-1"
-  | "university-year-2"
-  | "university-year-3"
-  | "university-year-4";
+export type DifficultyLevel =
+  | "beginner"
+  | "basic"
+  | "intermediate"
+  | "advanced"
+  | "expert";
 
 export type Subject =
   | "mathematics"
@@ -69,6 +58,12 @@ export interface Concept {
   whyItMatters?: MultilingualText;
   studyTip?: MultilingualText;
   position: Position3D;
+  /** Parent idea in nested learning worlds */
+  parentId?: string;
+  /** 0 = main world, 1 = sub-world, 2+ = detail */
+  layerDepth?: number;
+  /** Direct sub-ideas (lazy-filled from relationships) */
+  children?: Concept[];
 }
 
 export type RelationshipStrength = "strong" | "medium" | "weak";
@@ -120,7 +115,8 @@ export interface StudyGuide {
 
 export interface LearnerProgress {
   selectedLanguage: LanguageCode;
-  selectedLevel?: EducationLevel;
+  selectedDifficulty?: DifficultyLevel;
+  studyStyle?: "quick" | "deep" | "visual";
   completedTopics: string[];
   weakConcepts: string[];
   strongConcepts: string[];

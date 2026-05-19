@@ -1,12 +1,20 @@
-import type { EducationLevel, LanguageCode, LearnerProgress } from "@/types/learning";
+import type { DifficultyLevel, LanguageCode, LearnerProgress } from "@/types/learning";
+import { migrateLegacyLevel, type StudyStyle } from "@/lib/difficulty";
+import {
+  DEFAULT_LEARNING_VIEW,
+  type LearningViewMode,
+} from "@/types/learning-views";
 
 const KEYS = {
   language: "memory-palace-language",
+  difficulty: "memory-palace-difficulty",
   level: "memory-palace-level",
+  studyStyle: "memory-palace-study-style",
   progress: "memory-palace-progress",
   flashcards: "memory-palace-flashcards",
   onboardingDone: "memory-palace-onboarding-done",
   defaultView: "memory-palace-default-view",
+  selectedView: "memory-palace-selected-view",
 } as const;
 
 const DEFAULT_PROGRESS: LearnerProgress = {
@@ -34,16 +42,34 @@ export function setLanguage(lang: LanguageCode): void {
   saveProgress(p);
 }
 
-export function getLevel(): EducationLevel | undefined {
+export function getDifficulty(): DifficultyLevel | undefined {
   if (typeof window === "undefined") return undefined;
-  const v = localStorage.getItem(KEYS.level);
-  return v as EducationLevel | undefined;
+  const current = localStorage.getItem(KEYS.difficulty);
+  const migrated = migrateLegacyLevel(current ?? undefined);
+  if (migrated) return migrated;
+  const legacy = localStorage.getItem(KEYS.level);
+  return migrateLegacyLevel(legacy ?? undefined);
 }
 
-export function setLevel(level: EducationLevel): void {
-  localStorage.setItem(KEYS.level, level);
+export function setDifficulty(difficulty: DifficultyLevel): void {
+  localStorage.setItem(KEYS.difficulty, difficulty);
+  localStorage.removeItem(KEYS.level);
   const p = getProgress();
-  p.selectedLevel = level;
+  p.selectedDifficulty = difficulty;
+  saveProgress(p);
+}
+
+export function getStudyStyle(): StudyStyle | undefined {
+  if (typeof window === "undefined") return undefined;
+  const v = localStorage.getItem(KEYS.studyStyle);
+  if (v === "quick" || v === "deep" || v === "visual") return v;
+  return undefined;
+}
+
+export function setStudyStyle(style: StudyStyle): void {
+  localStorage.setItem(KEYS.studyStyle, style);
+  const p = getProgress();
+  p.studyStyle = style;
   saveProgress(p);
 }
 
@@ -51,11 +77,26 @@ export function getProgress(): LearnerProgress {
   if (typeof window === "undefined") return { ...DEFAULT_PROGRESS };
   try {
     const raw = localStorage.getItem(KEYS.progress);
-    if (!raw) return { ...DEFAULT_PROGRESS, selectedLanguage: getLanguage(), selectedLevel: getLevel() };
-    const parsed = JSON.parse(raw) as Partial<LearnerProgress>;
+    if (!raw) {
+      return {
+        ...DEFAULT_PROGRESS,
+        selectedLanguage: getLanguage(),
+        selectedDifficulty: getDifficulty(),
+        studyStyle: getStudyStyle(),
+      };
+    }
+    const parsed = JSON.parse(raw) as Partial<LearnerProgress> & {
+      selectedLevel?: string;
+    };
+    const selectedDifficulty =
+      migrateLegacyLevel(parsed.selectedDifficulty) ??
+      migrateLegacyLevel(parsed.selectedLevel) ??
+      getDifficulty();
     return {
       ...DEFAULT_PROGRESS,
       ...parsed,
+      selectedDifficulty,
+      studyStyle: parsed.studyStyle ?? getStudyStyle(),
       flashcardReviews: parsed.flashcardReviews ?? {},
     };
   } catch {
@@ -117,4 +158,17 @@ export function getDefaultRoomView(): DefaultRoomView {
 
 export function setDefaultRoomView(view: DefaultRoomView): void {
   localStorage.setItem(KEYS.defaultView, view);
+}
+
+export function getSelectedLearningView(): LearningViewMode {
+  if (typeof window === "undefined") return DEFAULT_LEARNING_VIEW;
+  const v = localStorage.getItem(KEYS.selectedView);
+  if (v === "focus" || v === "explore" || v === "creative" || v === "room") {
+    return v;
+  }
+  return DEFAULT_LEARNING_VIEW;
+}
+
+export function setSelectedLearningView(view: LearningViewMode): void {
+  localStorage.setItem(KEYS.selectedView, view);
 }

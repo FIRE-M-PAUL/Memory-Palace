@@ -3,7 +3,8 @@ type T = { [K in keyof import("./en").TranslationKeys]: string };
 export const es: Partial<T> & { appName: string } = {
   appName: "MEMORY PALACE",
   tagline: "Convierte el conocimiento en un lugar que puedes recorrer.",
-  taglineSub: "Aprendizaje espacial multilingüe desde primaria hasta universidad.",
+  taglineSub:
+    "Convierte tus notas en un mapa de estudio visual. Para quien quiera aprender a su ritmo.",
   enterPalace: "Entrar al Palacio",
   launchDemo: "Lanzar demo",
   dashboard: "Panel",
@@ -11,7 +12,7 @@ export const es: Partial<T> & { appName: string } = {
   create: "Crear",
   settings: "Ajustes",
   language: "Idioma",
-  level: "Nivel educativo",
+  difficulty: "Nivel de aprendizaje",
   welcome: "Bienvenido de nuevo",
   savedRooms: "Tus Palacios de Memoria",
   builtInLessons: "Lecciones integradas",

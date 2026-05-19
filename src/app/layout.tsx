@@ -11,7 +11,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: "MEMORY PALACE | Multilingual Spatial Learning",
   description:
-    "Turn your notes into a living memory world. Interactive 3D learning from Grade 1 to University.",
+    "Turn your notes into a living memory world. A visual learning platform for learners, thinkers, and explorers.",
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",

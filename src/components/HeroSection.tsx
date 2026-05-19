@@ -5,7 +5,7 @@ import {
   ArrowRight,
   Brain,
   Globe,
-  GraduationCap,
+  Compass,
   Map,
   Calculator,
   BookOpen,
@@ -15,7 +15,12 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/appStore";
 import { useAuth } from "@/hooks/useAuth";
 import { saveDemoRoom, DEMO_ROOM_ID } from "@/lib/roomStorage";
-import { HeroPreview3D } from "@/components/HeroPreview3D";
+import dynamic from "next/dynamic";
+
+const HeroPreview3D = dynamic(
+  () => import("@/components/HeroPreview3D").then((m) => m.HeroPreview3D),
+  { ssr: false }
+);
 import { Logo } from "@/components/Logo";
 
 export function HeroSection() {
@@ -26,7 +31,7 @@ export function HeroSection() {
   const features = [
     { icon: Map, title: t.features.room3d, desc: t.features.room3dDesc },
     { icon: Globe, title: t.features.multilingual, desc: t.features.multilingualDesc },
-    { icon: GraduationCap, title: t.features.grades, desc: t.features.gradesDesc },
+    { icon: Compass, title: t.features.forEveryone, desc: t.features.forEveryoneDesc },
     { icon: Calculator, title: t.features.math, desc: t.features.mathDesc },
     { icon: BookOpen, title: t.features.study, desc: t.features.studyDesc },
     { icon: Route, title: t.features.routes, desc: t.features.routesDesc },

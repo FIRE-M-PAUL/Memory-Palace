@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import type { KnowledgeRoom } from "@/types/memory-palace";
+import type { DifficultyLevel } from "@/types/learning";
 import { resolveText } from "@/lib/multilingual";
 import { useAppStore } from "@/store/appStore";
 import {
   checkMathAnswer,
   generateMathProblem,
-  topicForLevel,
+  topicForDifficulty,
 } from "@/lib/mathEngine";
 import {
   recordQuizScore,
@@ -22,8 +23,11 @@ interface PracticeQuizProps {
   roomId: string;
 }
 
+const DEFAULT_DIFFICULTY: DifficultyLevel = "intermediate";
+
 export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
-  const { language, t, level } = useAppStore();
+  const { language, t, difficulty } = useAppStore();
+  const activeDifficulty = difficulty ?? DEFAULT_DIFFICULTY;
   const questions = room.practiceQuestions;
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -33,14 +37,18 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
   const [done, setDone] = useState(false);
   const [mathMode, setMathMode] = useState(false);
   const [mathProblem, setMathProblem] = useState(() =>
-    level ? generateMathProblem(level, topicForLevel(level)) : null
+    generateMathProblem(activeDifficulty, topicForDifficulty(activeDifficulty))
   );
 
   if (mathMode && mathProblem && room.subject === "mathematics") {
     return (
       <MathProblemCard
         problem={mathProblem}
-        onNext={() => setMathProblem(generateMathProblem(level!, topicForLevel(level!)))}
+        onNext={() =>
+          setMathProblem(
+            generateMathProblem(activeDifficulty, topicForDifficulty(activeDifficulty))
+          )
+        }
       />
     );
   }
@@ -49,7 +57,7 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
     return (
       <div className="text-center py-8 space-y-4">
         <p className="text-slate-500">No practice questions in this room.</p>
-        {room.subject === "mathematics" && level && (
+        {room.subject === "mathematics" && (
           <Button onClick={() => setMathMode(true)}>Start Math Practice</Button>
         )}
       </div>
@@ -76,7 +84,16 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
     let correct = false;
     if (q.type === "math-input") {
       correct = checkMathAnswer(
-        { id: q.id, level: level ?? "grade-8", topic: topicForLevel(level ?? "grade-8"), difficulty: q.difficulty, question: resolveText(q.question, language), answer: q.answer, hints: q.hints.map((h) => resolveText(h, language)), steps: [resolveText(q.explanation, language)] },
+        {
+          id: q.id,
+          difficultyLevel: activeDifficulty,
+          topic: topicForDifficulty(activeDifficulty),
+          difficulty: q.difficulty,
+          question: resolveText(q.question, language),
+          answer: q.answer,
+          hints: q.hints.map((h) => resolveText(h, language)),
+          steps: [resolveText(q.explanation, language)],
+        },
         answer
       );
     } else {
@@ -156,7 +173,7 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
           </Button>
         )}
       </div>
-      {room.subject === "mathematics" && level && (
+      {room.subject === "mathematics" && (
         <Button variant="ghost" size="sm" onClick={() => setMathMode(true)}>
           Math practice
         </Button>

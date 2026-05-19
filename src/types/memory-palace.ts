@@ -1,6 +1,6 @@
 import type {
   Concept,
-  EducationLevel,
+  DifficultyLevel,
   Flashcard,
   MemoryRouteStep,
   MultilingualText,
@@ -10,13 +10,18 @@ import type {
   Subject,
 } from "./learning";
 
+/**
+ * Full knowledge for a study space. The 3D/2D UI renders one nested learning layer
+ * at a time (see `buildLayerRenderPlan`) — not the entire graph at once.
+ * Hierarchy is derived from relationships + `Concept.parentId` / `children` when set.
+ */
 export interface KnowledgeRoom {
   id: string;
   title: MultilingualText;
   summary: MultilingualText;
   rawContent?: string;
   subject?: Subject;
-  level?: EducationLevel;
+  difficulty?: DifficultyLevel;
   lessonId?: string;
   concepts: Concept[];
   relationships: Relationship[];

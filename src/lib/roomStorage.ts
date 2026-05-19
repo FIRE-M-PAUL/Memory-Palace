@@ -1,38 +1,37 @@
 import type { KnowledgeRoom } from "@/types/memory-palace";
-import { getDemoRoom } from "@/lib/demoRoom";
+import { DEMO_ROOM_ID } from "@/lib/constants";
 import { enrichRoom } from "@/lib/relationshipHelpers";
+import { getRooms, persistRoom } from "@/lib/roomsLocal";
 import { v4 as uuidv4 } from "uuid";
 
-const ROOMS_KEY = "memory-palace-rooms";
-const CHAT_KEY = "memory-palace-chat";
-export const DEMO_ROOM_ID = "demo-ai";
+export { DEMO_ROOM_ID } from "@/lib/constants";
+export { getRooms } from "@/lib/roomsLocal";
 
-export function getRooms(): KnowledgeRoom[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(ROOMS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+const CHAT_KEY = "memory-palace-chat";
+
+import { getDemoRoom } from "@/lib/demoRoom";
+
+let demoRoomCache: KnowledgeRoom | null = null;
+
+function getDemoRoomCached(): KnowledgeRoom {
+  if (!demoRoomCache) demoRoomCache = getDemoRoom();
+  return demoRoomCache;
 }
 
 export function getRoom(id: string): KnowledgeRoom | undefined {
   if (id === DEMO_ROOM_ID) {
     const saved = getRooms().find((r) => r.id === DEMO_ROOM_ID);
-    return saved ?? getDemoRoom();
+    return saved ?? getDemoRoomCached();
   }
   return getRooms().find((r) => r.id === id);
 }
 
 export function getRoomOrFallback(id: string): KnowledgeRoom {
-  return enrichRoom(getRoom(id) ?? getDemoRoom());
+  return enrichRoom(getRoom(id) ?? getDemoRoomCached());
 }
 
 export function saveRoom(room: KnowledgeRoom): void {
-  const rooms = getRooms().filter((r) => r.id !== room.id);
-  rooms.unshift(room);
-  localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
+  persistRoom(room);
 }
 
 export function createRoom(data: Omit<KnowledgeRoom, "id" | "createdAt">): KnowledgeRoom {
@@ -46,7 +45,7 @@ export function createRoom(data: Omit<KnowledgeRoom, "id" | "createdAt">): Knowl
 }
 
 export function saveDemoRoom(): KnowledgeRoom {
-  const demo = getDemoRoom();
+  const demo = getDemoRoomCached();
   saveRoom(demo);
   return demo;
 }

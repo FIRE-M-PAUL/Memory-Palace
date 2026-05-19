@@ -1,2 +1,2 @@
-export { BUILT_IN_LESSONS, getLessonById, filterLessons } from "./lessons";
+export { BUILT_IN_LESSONS, getLessonById, getLessonByIdOrLegacy, filterLessons } from "./lessons";
 export { lessonToRoom, buildLesson } from "./lessonBuilder";

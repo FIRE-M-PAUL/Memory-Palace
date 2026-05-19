@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getLessonById, lessonToRoom } from "@/lib/curriculum";
+import { getLessonByIdOrLegacy, lessonToRoom } from "@/lib/curriculum";
 import { createRoom } from "@/lib/roomStorage";
 import { resolveText } from "@/lib/multilingual";
 import { useAppStore } from "@/store/appStore";
@@ -15,7 +15,7 @@ export default function LessonDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { language, t } = useAppStore();
-  const lesson = getLessonById(params.lessonId as string);
+  const lesson = getLessonByIdOrLegacy(params.lessonId as string);
 
   if (!lesson) {
     return (
@@ -48,8 +48,8 @@ export default function LessonDetailPage() {
         </h1>
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge>{t.subjects[lesson.subject]}</Badge>
-          <Badge variant="secondary">{t.levels[lesson.level]}</Badge>
-          <Badge variant="outline">{lesson.concepts.length} concepts</Badge>
+          <Badge variant="secondary">{t.difficulties[lesson.difficulty]}</Badge>
+          <Badge variant="outline">{lesson.concepts.length} {t.ideasCount}</Badge>
         </div>
         <p className="text-slate-300 leading-relaxed mb-6">
           {resolveText(lesson.overview, language)}

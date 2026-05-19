@@ -1,4 +1,4 @@
-import type { EducationLevel } from "@/types/learning";
+import type { DifficultyLevel } from "@/types/learning";
 import { mt } from "@/lib/multilingual";
 
 export type MathTopic =
@@ -10,7 +10,7 @@ export type MathTopic =
 
 export interface MathProblem {
   id: string;
-  level: EducationLevel;
+  difficultyLevel: DifficultyLevel;
   topic: MathTopic;
   difficulty: "easy" | "medium" | "hard";
   question: string;
@@ -24,18 +24,18 @@ function randInt(min: number, max: number) {
 }
 
 export function generateMathProblem(
-  level: EducationLevel,
+  difficultyLevel: DifficultyLevel,
   topic: MathTopic,
   difficulty: "easy" | "medium" | "hard" = "medium"
 ): MathProblem {
   const id = `math-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-  if (topic === "addition" || level === "grade-1") {
+  if (topic === "addition" || difficultyLevel === "beginner") {
     const a = randInt(1, difficulty === "easy" ? 10 : 20);
     const b = randInt(1, difficulty === "easy" ? 10 : 20);
     return {
       id,
-      level: "grade-1",
+      difficultyLevel: "beginner",
       topic: "addition",
       difficulty,
       question: `${a} + ${b} = ?`,
@@ -45,13 +45,13 @@ export function generateMathProblem(
     };
   }
 
-  if (topic === "fractions" || level === "grade-4") {
+  if (topic === "fractions" || difficultyLevel === "basic") {
     const d = randInt(2, 8);
     const n1 = randInt(1, d - 1);
     const n2 = randInt(1, d - 1);
     return {
       id,
-      level: "grade-4",
+      difficultyLevel: "basic",
       topic: "fractions",
       difficulty,
       question: `${n1}/${d} + ${n2}/${d} = ? (give as fraction like a/b)`,
@@ -65,14 +65,14 @@ export function generateMathProblem(
     };
   }
 
-  if (topic === "linear-equations" || level === "grade-8") {
+  if (topic === "linear-equations" || difficultyLevel === "intermediate") {
     const x = randInt(1, 12);
     const a = randInt(2, 5);
     const b = randInt(1, 10);
     const c = a * x + b;
     return {
       id,
-      level: "grade-8",
+      difficultyLevel: "intermediate",
       topic: "linear-equations",
       difficulty,
       question: `Solve for x: ${a}x + ${b} = ${c}`,
@@ -86,7 +86,7 @@ export function generateMathProblem(
     };
   }
 
-  if (topic === "quadratic-equations" || level === "grade-10") {
+  if (topic === "quadratic-equations" || difficultyLevel === "advanced") {
     const r1 = randInt(1, 6);
     const r2 = randInt(1, 6);
     const b = -(r1 + r2);
@@ -94,7 +94,7 @@ export function generateMathProblem(
     const bStr = b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`;
     return {
       id,
-      level: "grade-10",
+      difficultyLevel: "advanced",
       topic: "quadratic-equations",
       difficulty,
       question: `Solve: x² ${bStr}x + ${c} = 0 (smaller root)`,
@@ -108,10 +108,9 @@ export function generateMathProblem(
     };
   }
 
-  // calculus basics
   return {
     id,
-    level: "university-year-1",
+    difficultyLevel: "expert",
     topic: "calculus-basics",
     difficulty,
     question: "Find the derivative of f(x) = x²",
@@ -139,13 +138,21 @@ export function getStepByStepSolution(problem: MathProblem): string[] {
   return problem.steps;
 }
 
-export function topicForLevel(level: EducationLevel): MathTopic {
-  if (level === "grade-1" || level === "grade-2" || level === "grade-3") return "addition";
-  if (level === "grade-4" || level === "grade-5" || level === "grade-6") return "fractions";
-  if (level === "grade-7" || level === "grade-8" || level === "grade-9") return "linear-equations";
-  if (level === "grade-10" || level === "grade-11" || level === "grade-12")
-    return "quadratic-equations";
-  return "calculus-basics";
+export function topicForDifficulty(difficulty: DifficultyLevel): MathTopic {
+  switch (difficulty) {
+    case "beginner":
+      return "addition";
+    case "basic":
+      return "fractions";
+    case "intermediate":
+      return "linear-equations";
+    case "advanced":
+      return "quadratic-equations";
+    case "expert":
+      return "calculus-basics";
+    default:
+      return "linear-equations";
+  }
 }
 
 export function mathProblemToPractice(problem: MathProblem) {

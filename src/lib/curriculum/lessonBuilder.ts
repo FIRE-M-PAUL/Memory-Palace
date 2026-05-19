@@ -1,6 +1,6 @@
 import type {
   Concept,
-  EducationLevel,
+  DifficultyLevel,
   Flashcard,
   MemoryRouteStep,
   MultilingualText,
@@ -32,7 +32,7 @@ export function buildLesson(params: {
   id: string;
   title: MultilingualText;
   subject: Subject;
-  level: EducationLevel;
+  difficulty: DifficultyLevel;
   overview: MultilingualText;
   conceptData: {
     title: MultilingualText;
@@ -77,7 +77,7 @@ export function buildLesson(params: {
     id: params.id,
     title: params.title,
     subject: params.subject,
-    level: params.level,
+    difficulty: params.difficulty,
     overview: params.overview,
     concepts,
     relationships,
@@ -101,7 +101,7 @@ export function lessonToRoom(lesson: Lesson, rawContent?: string): Omit<Knowledg
     summary: lesson.overview,
     rawContent: rawContent ?? lesson.overview.en,
     subject: lesson.subject,
-    level: lesson.level,
+    difficulty: lesson.difficulty,
     lessonId: lesson.id,
     concepts: lesson.concepts,
     relationships: lesson.relationships,

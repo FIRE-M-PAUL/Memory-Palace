@@ -27,10 +27,10 @@ const fc = (id: string, front: string, back: string, conceptId?: string) => ({
 
 export const BUILT_IN_LESSONS: Lesson[] = [
   buildLesson({
-    id: "grade-1-addition",
+    id: "beginner-addition",
     title: mt("Addition", { sw: "Kuongeza", bem: "Kukonkesha", nya: "Kuwerengera" }),
     subject: "mathematics",
-    level: "grade-1",
+    difficulty: "beginner",
     overview: mt(
       "Addition means putting numbers together to find how many in total. It is one of the first maths skills learners master.",
       { sw: "Kuongeza ni kuweka namba pamoja kupata jumla.", bem: "Ukukonkesha kuleta amanamba pamodzi." }
@@ -56,10 +56,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "grade-4-fractions",
+    id: "basic-fractions",
     title: mt("Fractions"),
     subject: "mathematics",
-    level: "grade-4",
+    difficulty: "basic",
     overview: mt("Fractions show parts of a whole. The top number is the numerator and the bottom is the denominator."),
     conceptData: [
       { title: mt("Fraction"), summary: mt("A number that represents part of a whole."), cluster: "Fundamentals", importance: "high" },
@@ -76,10 +76,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "grade-8-linear-equations",
+    id: "intermediate-linear-equations",
     title: mt("Linear Equations"),
     subject: "mathematics",
-    level: "grade-8",
+    difficulty: "intermediate",
     overview: mt("A linear equation has variables raised only to the first power. Solving means finding the value of the variable."),
     conceptData: [
       { title: mt("Linear Equation"), summary: mt("An equation that graphs as a straight line."), cluster: "Fundamentals", importance: "high" },
@@ -96,10 +96,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "grade-10-quadratic",
+    id: "advanced-quadratic-equations",
     title: mt("Quadratic Equations"),
     subject: "mathematics",
-    level: "grade-10",
+    difficulty: "advanced",
     overview: mt("Quadratic equations include x² terms. They can be solved by factoring, completing the square, or the quadratic formula."),
     conceptData: [
       { title: mt("Quadratic Equation"), summary: mt("An equation with x² as the highest power."), cluster: "Fundamentals", importance: "high" },
@@ -116,10 +116,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "uni-1-calculus",
+    id: "advanced-calculus-basics",
     title: mt("Calculus Basics"),
     subject: "mathematics",
-    level: "university-year-1",
+    difficulty: "advanced",
     overview: mt("Calculus studies change. Derivatives measure rates of change; integrals measure accumulation."),
     conceptData: [
       { title: mt("Limit"), summary: mt("The value a function approaches."), cluster: "Fundamentals", importance: "high" },
@@ -136,10 +136,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "grade-8-photosynthesis",
+    id: "intermediate-photosynthesis",
     title: mt("Photosynthesis", { sw: "Photosynthesis", bem: "Photosynthesis" }),
     subject: "science",
-    level: "grade-8",
+    difficulty: "intermediate",
     overview: mt(
       "Photosynthesis is how green plants make food using sunlight, water, and carbon dioxide, releasing oxygen.",
       { sw: "Mimea hutengeneza chakula kwa kutumia jua, maji, na dioksidi ya kaboni." }
@@ -159,10 +159,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "grade-10-electricity",
+    id: "advanced-electricity",
     title: mt("Electricity"),
     subject: "physics",
-    level: "grade-10",
+    difficulty: "advanced",
     overview: mt("Electricity is the flow of electric charge. Circuits need a source, conductors, and often a load."),
     conceptData: [
       { title: mt("Electric Current"), summary: mt("Flow of charge through a conductor."), cluster: "Fundamentals", importance: "high" },
@@ -179,10 +179,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "uni-1-programming",
-    title: mt("Programming Basics"),
+    id: "basic-programming-fundamentals",
+    title: mt("Programming Fundamentals"),
     subject: "programming",
-    level: "university-year-1",
+    difficulty: "basic",
     overview: mt("Programming is giving instructions to a computer. Core ideas include variables, control flow, and functions."),
     conceptData: [
       { title: mt("Algorithm"), summary: mt("Step-by-step procedure to solve a problem."), cluster: "Fundamentals", importance: "high" },
@@ -199,10 +199,10 @@ export const BUILT_IN_LESSONS: Lesson[] = [
   }),
 
   buildLesson({
-    id: "grade-10-databases",
+    id: "intermediate-databases",
     title: mt("Databases"),
     subject: "database-systems",
-    level: "grade-10",
+    difficulty: "intermediate",
     overview: mt("Databases organize data for efficient storage and retrieval. Tables, keys, and SQL are foundational."),
     conceptData: [
       { title: mt("Database"), summary: mt("Organized collection of data."), cluster: "Fundamentals", importance: "high" },
@@ -213,16 +213,16 @@ export const BUILT_IN_LESSONS: Lesson[] = [
       { title: mt("Relationship"), summary: mt("Links between tables."), cluster: "Applications" },
     ],
     relationshipPairs: [[0, 1, "contains"], [1, 2, "uses"], [3, 4, "executes"], [5, 1, "connects"]],
-    examples: [mt("SELECT name FROM students WHERE grade > 80;")],
+    examples: [mt("SELECT name FROM students WHERE score > 80;")],
     practiceQuestions: [q("q1", "What uniquely identifies a row?", "primary key", "Primary keys are unique.")],
     flashcards: [fc("f1", "What is SQL?", "Structured Query Language.", "concept-4")],
   }),
 
   buildLesson({
-    id: "grade-12-genetics",
+    id: "expert-genetics",
     title: mt("Genetics"),
     subject: "biology",
-    level: "grade-12",
+    difficulty: "expert",
     overview: mt("Genetics studies heredity and variation. DNA carries genes that determine traits passed to offspring."),
     conceptData: [
       { title: mt("DNA"), summary: mt("Molecule storing genetic instructions."), cluster: "Fundamentals", importance: "high" },
@@ -243,14 +243,35 @@ export function getLessonById(id: string): Lesson | undefined {
   return BUILT_IN_LESSONS.find((l) => l.id === id);
 }
 
+/** Resolve lesson by current or legacy id */
+export function getLessonByIdOrLegacy(id: string): Lesson | undefined {
+  const direct = getLessonById(id);
+  if (direct) return direct;
+  const legacyMap: Record<string, string> = {
+    "grade-1-addition": "beginner-addition",
+    "grade-4-fractions": "basic-fractions",
+    "grade-8-linear-equations": "intermediate-linear-equations",
+    "grade-10-quadratic": "advanced-quadratic-equations",
+    "uni-1-calculus": "advanced-calculus-basics",
+    "grade-8-photosynthesis": "intermediate-photosynthesis",
+    "grade-10-electricity": "advanced-electricity",
+    "uni-1-programming": "basic-programming-fundamentals",
+    "grade-10-databases": "intermediate-databases",
+    "grade-12-genetics": "expert-genetics",
+  };
+  const mapped = legacyMap[id];
+  return mapped ? getLessonById(mapped) : undefined;
+}
+
 export function filterLessons(filters: {
   subject?: string;
-  level?: string;
+  difficulty?: string;
   search?: string;
 }): Lesson[] {
   return BUILT_IN_LESSONS.filter((l) => {
     if (filters.subject && filters.subject !== "all" && l.subject !== filters.subject) return false;
-    if (filters.level && filters.level !== "all" && l.level !== filters.level) return false;
+    if (filters.difficulty && filters.difficulty !== "all" && l.difficulty !== filters.difficulty)
+      return false;
     if (filters.search) {
       const s = filters.search.toLowerCase();
       if (!l.title.en.toLowerCase().includes(s) && !l.overview.en.toLowerCase().includes(s))

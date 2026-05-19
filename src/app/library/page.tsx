@@ -4,18 +4,18 @@ import { useMemo, useState } from "react";
 import { filterLessons } from "@/lib/curriculum";
 import { LessonCard } from "@/components/LessonCard";
 import { useAppStore } from "@/store/appStore";
-import { SUBJECTS } from "@/types/curriculum";
+import { SUBJECTS, DIFFICULTY_LEVELS } from "@/types/curriculum";
 import { Input } from "@/components/ui/input";
 
 export default function LibraryPage() {
   const t = useAppStore((s) => s.t);
   const [search, setSearch] = useState("");
   const [subject, setSubject] = useState("all");
-  const [level, setLevel] = useState("all");
+  const [difficulty, setDifficulty] = useState("all");
 
   const lessons = useMemo(
-    () => filterLessons({ search, subject, level }),
-    [search, subject, level]
+    () => filterLessons({ search, subject, difficulty }),
+    [search, subject, difficulty]
   );
 
   return (
@@ -35,6 +35,7 @@ export default function LibraryPage() {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             className="h-11 rounded-xl border border-cyan-500/20 bg-slate-900/50 px-3 text-sm text-slate-200"
+            aria-label={t.filterTopic}
           >
             <option value="all">{t.allSubjects}</option>
             {SUBJECTS.map((s) => (
@@ -44,14 +45,15 @@ export default function LibraryPage() {
             ))}
           </select>
           <select
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
             className="h-11 rounded-xl border border-cyan-500/20 bg-slate-900/50 px-3 text-sm text-slate-200"
+            aria-label={t.filterDifficulty}
           >
-            <option value="all">{t.allLevels}</option>
-            {(Object.entries(t.levels) as [string, string][]).map(([k, label]) => (
-              <option key={k} value={k}>
-                {label}
+            <option value="all">{t.allDifficulties}</option>
+            {DIFFICULTY_LEVELS.map((d) => (
+              <option key={d} value={d}>
+                {t.difficulties[d]}
               </option>
             ))}
           </select>
@@ -63,7 +65,7 @@ export default function LibraryPage() {
           ))}
         </div>
         {lessons.length === 0 && (
-          <p className="text-center text-slate-500 py-12">No lessons match your filters.</p>
+          <p className="text-center text-slate-500 py-12">{t.noLessons}</p>
         )}
       </div>
     </div>

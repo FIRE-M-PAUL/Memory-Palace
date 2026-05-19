@@ -428,14 +428,18 @@ function roomToExtraction(room: KnowledgeRoom): LocalExtractionResult {
 export function extractionToRoom(
   extraction: LocalExtractionResult,
   rawContent?: string,
-  meta?: { subject?: KnowledgeRoom["subject"]; level?: KnowledgeRoom["level"]; lessonId?: string }
+  meta?: {
+    subject?: KnowledgeRoom["subject"];
+    difficulty?: KnowledgeRoom["difficulty"];
+    lessonId?: string;
+  }
 ): Omit<KnowledgeRoom, "id" | "createdAt"> {
   return {
     title: extraction.title,
     summary: extraction.summary,
     rawContent,
     subject: meta?.subject,
-    level: meta?.level,
+    difficulty: meta?.difficulty,
     lessonId: meta?.lessonId,
     concepts: extraction.concepts,
     relationships: extraction.relationships,

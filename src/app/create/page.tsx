@@ -123,7 +123,7 @@ function CreatePageContent() {
                 <option value="">— {t.builtInLessons} —</option>
                 {BUILT_IN_LESSONS.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {resolveText(l.title, language)} ({t.levels[l.level]})
+                    {resolveText(l.title, language)} ({t.difficulties[l.difficulty]})
                   </option>
                 ))}
               </select>

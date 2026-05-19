@@ -7,13 +7,17 @@ import {
   hasCompletedOnboarding,
   setOnboardingComplete,
 } from "@/lib/progressStorage";
+import { DIFFICULTY_LEVELS } from "@/types/curriculum";
+import type { DifficultyLevel } from "@/types/learning";
 import { useAppStore } from "@/store/appStore";
 
 export function OnboardingGuide() {
   const t = useAppStore((s) => s.t);
+  const setDifficulty = useAppStore((s) => s.setDifficulty);
   const [open, setOpen] = useState(() =>
     typeof window !== "undefined" ? !hasCompletedOnboarding() : false
   );
+  const [picked, setPicked] = useState<DifficultyLevel | "">("");
 
   if (!open) return null;
 
@@ -26,6 +30,7 @@ export function OnboardingGuide() {
   ];
 
   const finish = () => {
+    if (picked) setDifficulty(picked);
     setOnboardingComplete();
     setOpen(false);
   };
@@ -33,7 +38,7 @@ export function OnboardingGuide() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div
-        className="glass-strong rounded-2xl p-6 sm:p-8 max-w-md w-full border border-cyan-500/20 shadow-xl"
+        className="glass-strong rounded-2xl p-6 sm:p-8 max-w-md w-full border border-cyan-500/20 shadow-xl max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-labelledby="onboarding-title"
       >
@@ -55,6 +60,23 @@ export function OnboardingGuide() {
             </li>
           ))}
         </ol>
+        <p className="text-sm text-slate-400 mb-3">{t.onboardingDifficultyPrompt}</p>
+        <div className="grid grid-cols-2 gap-2 mb-6">
+          {DIFFICULTY_LEVELS.map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setPicked(d)}
+              className={`rounded-xl border px-3 py-2 text-sm transition-colors min-h-[44px] ${
+                picked === d
+                  ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-100"
+                  : "border-slate-700 text-slate-400 hover:border-slate-500"
+              }`}
+            >
+              {t.difficulties[d]}
+            </button>
+          ))}
+        </div>
         <div className="flex flex-col gap-2">
           <Button size="lg" className="w-full" onClick={finish}>
             {t.onboardingCta}

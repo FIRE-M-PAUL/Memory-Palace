@@ -3,7 +3,8 @@ type T = { [K in keyof import("./en").TranslationKeys]: string };
 export const bem: Partial<T> & { appName: string } = {
   appName: "MEMORY PALACE",
   tagline: "Cinja ubumi bwa mano ukaba icibansa wingilamo.",
-  taglineSub: "Ukufunda mu cifulo ne miaka ukufuma mu Garde 1 ukufika ku Yunivasite.",
+  taglineSub:
+    "Pangila amanota yenu ukabe mapu ya ukufunda. Ku bantu bonse abalefwaya ukufunda.",
   enterPalace: "Ingila mu Palace",
   launchDemo: "Tampila Demo",
   dashboard: "Dashboard",
@@ -11,7 +12,7 @@ export const bem: Partial<T> & { appName: string } = {
   create: "Panga",
   settings: "Amasetingi",
   language: "Ululimi",
-  level: "Igrade",
+  difficulty: "Icale ca ukufunda",
   welcome: "Mwaiseni na kabili, Umwanuke",
   savedRooms: "Amapalace yenu",
   builtInLessons: "Amasomo ayaba",

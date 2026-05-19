@@ -7,7 +7,7 @@ import { findRelationship } from "@/lib/relationshipHelpers";
 /** Virtual id for the central core topic (room title), not a concept node */
 export const CORE_TOPIC_ID = "__core_topic__";
 
-const MAIN_IDEA_LIMIT = 8;
+const MAIN_IDEA_LIMIT = 10;
 const RING_RADIUS = 4.8;
 
 export type MapDisplayMode = "simple" | "explore";
@@ -188,8 +188,7 @@ export function resolveConnectionParties(
 
 export function getCoreLinkRelationship(
   room: KnowledgeRoom,
-  mainIdeaId: string,
-  coreTitle: string
+  mainIdeaId: string
 ): Relationship {
   const concept = room.concepts.find((c) => c.id === mainIdeaId);
   const rel = concept

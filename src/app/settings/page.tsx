@@ -1,7 +1,8 @@
 "use client";
 
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { LevelSelector } from "@/components/LevelSelector";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { StudyStyleSelector } from "@/components/StudyStyleSelector";
 import { useAppStore } from "@/store/appStore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -20,8 +21,13 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-3">
-          <label className="text-sm text-slate-400">{t.selectLevel}</label>
-          <LevelSelector className="w-full" />
+          <label className="text-sm text-slate-400">{t.selectDifficulty}</label>
+          <DifficultySelector className="w-full" />
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm text-slate-400">{t.selectStudyStyle}</label>
+          <StudyStyleSelector className="w-full" />
         </div>
 
         <Button asChild className="w-full">

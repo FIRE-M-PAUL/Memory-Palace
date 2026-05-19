@@ -1,42 +1,31 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { Concept } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
 import { getClusterColor } from "@/types/memory-palace";
 import { resolveText } from "@/lib/multilingual";
 import { useAppStore } from "@/store/appStore";
 import { MapLegendPanel } from "@/components/MapLegendPanel";
-
-const VISIBLE_DEFAULT = 16;
+import {
+  getCachedGuidedLayout,
+  getCachedLayerRenderPlan,
+} from "@/lib/roomComputeCache";
+import { getPerformanceProfile } from "@/lib/performanceProfile";
+import type { LearningViewMode } from "@/types/learning-views";
+import type { LayerStack } from "@/types/nested-worlds";
 
 interface KnowledgeGraph2DProps {
   room: KnowledgeRoom;
   selectedId: string | null;
   onSelectConcept: (id: string) => void;
+  onConceptActivate: (conceptId: string) => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
   showStudyPath?: boolean;
   routeConceptIds?: string[];
-}
-
-function layoutConcepts(concepts: Concept[]): Map<string, { x: number; y: number }> {
-  const positions = new Map<string, { x: number; y: number }>();
-  const clusters = [...new Set(concepts.map((c) => c.cluster))];
-  const centerX = 400;
-  const centerY = 280;
-
-  concepts.forEach((concept, i) => {
-    const clusterIndex = clusters.indexOf(concept.cluster);
-    const angle =
-      (clusterIndex / Math.max(clusters.length, 1)) * Math.PI * 2 +
-      (i / concepts.length) * Math.PI * 0.5;
-    const radius = 100 + clusterIndex * 45;
-    positions.set(concept.id, {
-      x: centerX + Math.cos(angle) * radius,
-      y: centerY + Math.sin(angle) * radius,
-    });
-  });
-  return positions;
+  learningView?: LearningViewMode;
+  layerStack: LayerStack;
+  transitioning?: boolean;
 }
 
 function radiusForImportance(importance: Concept["importance"]): number {
@@ -49,46 +38,76 @@ export function KnowledgeGraph2D({
   room,
   selectedId,
   onSelectConcept,
+  onConceptActivate,
   onSelectConnection,
   showStudyPath = false,
   routeConceptIds = [],
+  learningView = "focus",
+  layerStack,
+  transitioning = false,
 }: KnowledgeGraph2DProps) {
   const { language, t } = useAppStore();
-  const [showAll, setShowAll] = useState(false);
+  const profile = useMemo(() => getPerformanceProfile(), []);
 
-  const sorted = useMemo(() => {
-    const order = { high: 0, medium: 1, low: 2 };
-    return [...room.concepts].sort(
-      (a, b) => order[a.importance] - order[b.importance]
-    );
-  }, [room.concepts]);
-
-  const visible = showAll ? sorted : sorted.slice(0, VISIBLE_DEFAULT);
-  const positions = useMemo(() => layoutConcepts(visible), [visible]);
-  const visibleIds = new Set(visible.map((c) => c.id));
-
-  const visibleRels = room.relationships.filter(
-    (r) => visibleIds.has(r.source) && visibleIds.has(r.target)
+  const layout = useMemo(
+    () => getCachedGuidedLayout(room, language),
+    [room, language]
   );
+
+  const layerPlan = useMemo(
+    () =>
+      getCachedLayerRenderPlan(
+        room,
+        layerStack,
+        learningView,
+        layout,
+        profile,
+        language
+      ),
+    [room, layerStack, learningView, layout, profile, language]
+  );
+
+  const visible = layerPlan.visibleConcepts;
+  const positions = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }>();
+    const centerX = 400;
+    const centerY = 280;
+    const count = visible.length;
+    visible.forEach((concept, i) => {
+      const p = layerPlan.positionCache.get(concept.id);
+      if (p) {
+        map.set(concept.id, {
+          x: centerX + p.x * 55,
+          y: centerY + p.z * 55,
+        });
+      } else {
+        const angle = (i / Math.max(count, 1)) * Math.PI * 2;
+        map.set(concept.id, {
+          x: centerX + Math.cos(angle) * 120,
+          y: centerY + Math.sin(angle) * 120,
+        });
+      }
+    });
+    return map;
+  }, [visible, layerPlan.positionCache]);
+
+  const visibleRels =
+    layerPlan.layerDepth > 0 ? layerPlan.localRelationships : [];
 
   const routeIndex = (id: string) => routeConceptIds.indexOf(id);
 
   return (
-    <div className="w-full h-full min-h-[420px] glass rounded-2xl overflow-hidden relative flex flex-col">
+    <div
+      className={`w-full h-full min-h-[420px] glass rounded-2xl overflow-hidden relative flex flex-col transition-opacity duration-300 ${
+        transitioning ? "opacity-40" : "opacity-100"
+      }`}
+    >
       <div className="absolute top-3 left-3 z-10 max-w-[200px] hidden sm:block">
         <MapLegendPanel compact />
       </div>
-      {sorted.length > VISIBLE_DEFAULT && (
-        <div className="absolute top-3 right-3 z-10">
-          <button
-            type="button"
-            onClick={() => setShowAll((v) => !v)}
-            className="text-xs glass px-3 py-2 rounded-lg text-cyan-300 hover:border-cyan-500/30 min-h-[36px]"
-          >
-            {showAll ? t.showFewerIdeas : t.showMoreIdeas}
-          </button>
-        </div>
-      )}
+      <p className="text-center text-xs text-violet-300/90 pt-3 px-4">
+        {layerPlan.layerCoreTitle}
+      </p>
       <svg viewBox="0 0 800 560" className="w-full flex-1 min-h-[360px]">
         <defs>
           <filter id="glow2d">
@@ -162,11 +181,19 @@ export function KnowledgeGraph2D({
             <g
               key={concept.id}
               transform={`translate(${pos.x}, ${pos.y})`}
-              onClick={() => onSelectConcept(concept.id)}
+              onClick={() => {
+                onSelectConcept(concept.id);
+                onConceptActivate(concept.id);
+              }}
               className="cursor-pointer"
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && onSelectConcept(concept.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  onSelectConcept(concept.id);
+                  onConceptActivate(concept.id);
+                }
+              }}
             >
               <circle
                 r={selected ? r + 4 : r}

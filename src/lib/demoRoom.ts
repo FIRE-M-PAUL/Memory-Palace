@@ -1,6 +1,6 @@
 import type { KnowledgeRoom } from "@/types/memory-palace";
 import { mt } from "@/lib/multilingual";
-import { DEMO_ROOM_ID } from "@/lib/roomStorage";
+import { DEMO_ROOM_ID } from "@/lib/constants";
 import { positionsFor } from "@/lib/curriculum/lessonBuilder";
 
 export function getDemoRoom(): KnowledgeRoom {

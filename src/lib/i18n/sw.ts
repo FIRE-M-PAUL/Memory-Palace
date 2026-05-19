@@ -3,7 +3,8 @@ type T = { [K in keyof import("./en").TranslationKeys]: string };
 export const sw: Partial<T> & { appName: string } = {
   appName: "MEMORY PALACE",
   tagline: "Geuza maarifa kuwa mahali unaweza kutembea.",
-  taglineSub: "Mazingira ya kujifunza kwa nafasi na lugha nyingi kutoka Darasa la 1 hadi Chuo.",
+  taglineSub:
+    "Badilisha maelezo yako kuwa ramani ya kusoma. Kwa kila mwanafunzi, kwa kasi yako mwenyewe.",
   enterPalace: "Ingia Ikulu ya Kumbukumbu",
   launchDemo: "Anzisha Demo",
   dashboard: "Dashibodi",
@@ -11,7 +12,7 @@ export const sw: Partial<T> & { appName: string } = {
   create: "Unda",
   settings: "Mipangilio",
   language: "Lugha",
-  level: "Kiwango cha elimu",
+  difficulty: "Kiwango cha kujifunza",
   welcome: "Karibu tena, Mwanafunzi",
   savedRooms: "Ikulu zako za Kumbukumbu",
   builtInLessons: "Masomo yaliyojengwa",

@@ -183,11 +183,33 @@ Architecture stubs: `src/lib/supabase.ts` (optional).
 
 ## Deploy on Vercel
 
+### Preflight (run locally)
+
 ```bash
+npm install
+npm run typecheck
+npm run lint
 npm run build
+npm run start   # smoke-test at http://localhost:3000
 ```
 
-Push to GitHub, import in Vercel, deploy. No environment variables required for the demo MVP.
+### Vercel
+
+1. Push the repo to GitHub.
+2. Import the project in [Vercel](https://vercel.com) (Framework: **Next.js**).
+3. **Node.js 20+** (see `.nvmrc`).
+4. Build command: `npm run build` · Output: default (Next.js).
+5. **No env vars required** for the demo MVP (localStorage + local knowledge engine).
+
+Optional env vars — copy from `.env.example`:
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENAI_API_KEY` | Cloud AI (future) |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth & cloud sync |
+| `MAX_UPLOAD_MB` / `NEXT_PUBLIC_MAX_UPLOAD_MB` | File upload cap (default **4** on Vercel) |
+
+`vercel.json` sets a 60s timeout for document extraction (`/api/extract-file`).
 
 ## Future Improvements
 

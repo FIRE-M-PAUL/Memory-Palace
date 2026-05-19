@@ -1,4 +1,5 @@
-import type { Concept, EducationLevel, Relationship } from "@/types/learning";
+import type { Concept, DifficultyLevel, Relationship } from "@/types/learning";
+import { simplifyTextForDifficulty } from "@/lib/difficulty";
 import type { KnowledgeRoom } from "@/types/memory-palace";
 import { mt } from "@/lib/multilingual";
 import { resolveText } from "@/lib/multilingual";
@@ -140,26 +141,9 @@ export function findRelationship(
   );
 }
 
-/** Simpler wording for younger learners */
-export function simplifyTextForLevel(
-  text: string,
-  level?: EducationLevel
-): string {
-  if (!level) return text;
-  const gradeNum = parseInt(level.replace(/\D/g, ""), 10);
-  if (level.startsWith("university")) return text;
-  if (gradeNum <= 4) {
-    return text
-      .replace(/ furthermore| moreover| therefore| consequently/gi, "")
-      .replace(/\b(utilize|demonstrate|facilitate)\b/gi, (m) =>
-        m.toLowerCase() === "utilize"
-          ? "use"
-          : m.toLowerCase() === "demonstrate"
-            ? "show"
-            : "help"
-      );
-  }
-  return text;
+/** Simpler wording based on preferred learning difficulty */
+export function simplifyTextForLevel(text: string, difficulty?: DifficultyLevel): string {
+  return simplifyTextForDifficulty(text, difficulty);
 }
 
 export function resolveRelationshipText(

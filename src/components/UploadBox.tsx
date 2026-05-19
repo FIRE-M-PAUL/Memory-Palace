@@ -5,6 +5,8 @@ import { Upload, FileText, X, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   ACCEPT_FILE_INPUT,
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_MB,
   SUPPORTED_FORMATS_LABEL,
   getFileExtension,
   isPlainTextExtension,
@@ -28,6 +30,12 @@ export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) 
       setLocalError(null);
 
       try {
+        if (file.size > MAX_UPLOAD_BYTES) {
+          throw new Error(
+            `File is too large. Maximum size is ${MAX_UPLOAD_MB}MB.`
+          );
+        }
+
         const ext = getFileExtension(file.name);
         let text: string;
 
@@ -149,7 +157,7 @@ export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) 
             <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
               {SUPPORTED_FORMATS_LABEL}
             </p>
-            <p className="text-xs text-slate-600 mt-2">Max file size: 15MB</p>
+            <p className="text-xs text-slate-600 mt-2">Max file size: {MAX_UPLOAD_MB}MB</p>
           </>
         )}
       </div>

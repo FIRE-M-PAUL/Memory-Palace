@@ -20,7 +20,16 @@ export const SUPPORTED_EXTENSIONS = [
 /** Legacy Office formats — ask user to convert to Open XML */
 export const LEGACY_EXTENSIONS = ["doc", "ppt", "xls"] as const;
 
-export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15 MB
+/** Default 4MB — safe for Vercel serverless body limits; raise via MAX_UPLOAD_MB in .env */
+function resolveMaxUploadMb(): number {
+  const raw =
+    process.env.MAX_UPLOAD_MB ?? process.env.NEXT_PUBLIC_MAX_UPLOAD_MB ?? "4";
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 4;
+}
+
+export const MAX_UPLOAD_MB = resolveMaxUploadMb();
+export const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
 
 export const ACCEPT_FILE_INPUT = [
   ...SUPPORTED_EXTENSIONS.map((ext) => `.${ext}`),

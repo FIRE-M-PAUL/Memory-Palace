@@ -1,41 +1,65 @@
 "use client";
 
 import { create } from "zustand";
-import type { EducationLevel, LanguageCode } from "@/types/learning";
+import type { DifficultyLevel, LanguageCode } from "@/types/learning";
+import type { StudyStyle } from "@/lib/difficulty";
 import {
   getLanguage,
-  getLevel,
+  getDifficulty,
+  getStudyStyle,
   setLanguage as persistLanguage,
-  setLevel as persistLevel,
+  setDifficulty as persistDifficulty,
+  setStudyStyle as persistStudyStyle,
 } from "@/lib/progressStorage";
-import { getTranslations, type TranslationKeys } from "@/lib/i18n";
+import { loadTranslations, primeTranslationCache, type TranslationKeys } from "@/lib/i18n";
+import { en } from "@/lib/i18n/en";
 
 interface AppState {
   language: LanguageCode;
-  level?: EducationLevel;
+  difficulty?: DifficultyLevel;
+  studyStyle?: StudyStyle;
   hydrated: boolean;
   t: TranslationKeys;
   setLanguage: (lang: LanguageCode) => void;
-  setLevel: (level: EducationLevel) => void;
+  setDifficulty: (difficulty: DifficultyLevel) => void;
+  setStudyStyle: (style: StudyStyle) => void;
   hydrate: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   language: "en",
-  level: undefined,
+  difficulty: undefined,
+  studyStyle: undefined,
   hydrated: false,
-  t: getTranslations("en"),
+  t: en as unknown as TranslationKeys,
   hydrate: () => {
     const lang = getLanguage();
-    const level = getLevel();
-    set({ language: lang, level, hydrated: true, t: getTranslations(lang) });
+    const difficulty = getDifficulty();
+    const studyStyle = getStudyStyle();
+    void loadTranslations(lang).then((t) => {
+      primeTranslationCache(lang, t);
+      set({
+        language: lang,
+        difficulty,
+        studyStyle,
+        hydrated: true,
+        t,
+      });
+    });
   },
   setLanguage: (lang) => {
     persistLanguage(lang);
-    set({ language: lang, t: getTranslations(lang) });
+    void loadTranslations(lang).then((t) => {
+      primeTranslationCache(lang, t);
+      set({ language: lang, t });
+    });
   },
-  setLevel: (level) => {
-    persistLevel(level);
-    set({ level });
+  setDifficulty: (difficulty) => {
+    persistDifficulty(difficulty);
+    set({ difficulty });
+  },
+  setStudyStyle: (style) => {
+    persistStudyStyle(style);
+    set({ studyStyle: style });
   },
 }));

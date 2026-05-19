@@ -9,21 +9,39 @@ import { RoomCard } from "@/components/RoomCard";
 import { LessonCard } from "@/components/LessonCard";
 import { ProgressSummary } from "@/components/ProgressSummary";
 import { EmptyState } from "@/components/EmptyState";
-import { OnboardingGuide } from "@/components/OnboardingGuide";
-import { LevelSelector } from "@/components/LevelSelector";
-import { getRooms, saveDemoRoom, DEMO_ROOM_ID } from "@/lib/roomStorage";
-import { BUILT_IN_LESSONS } from "@/lib/curriculum";
+import dynamic from "next/dynamic";
+
+const OnboardingGuide = dynamic(
+  () => import("@/components/OnboardingGuide").then((m) => m.OnboardingGuide),
+  { ssr: false }
+);
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { StudyStyleSelector } from "@/components/StudyStyleSelector";
+import { saveDemoRoom, DEMO_ROOM_ID } from "@/lib/roomStorage";
+import { getRooms } from "@/lib/roomsLocal";
+import type { Lesson } from "@/types/curriculum";
 import { useAppStore } from "@/store/appStore";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const t = useAppStore((s) => s.t);
-  const level = useAppStore((s) => s.level);
+  const difficulty = useAppStore((s) => s.difficulty);
   const [rooms, setRooms] = useState<ReturnType<typeof getRooms>>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     setRooms(getRooms());
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void import("@/lib/curriculum").then(({ BUILT_IN_LESSONS }) => {
+      if (!cancelled) setLessons(BUILT_IN_LESSONS);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const launchDemo = () => {
@@ -31,9 +49,9 @@ export default function DashboardPage() {
     router.push(`/room/${DEMO_ROOM_ID}`);
   };
 
-  const filteredLessons = level
-    ? BUILT_IN_LESSONS.filter((l) => l.level === level).slice(0, 4)
-    : BUILT_IN_LESSONS.slice(0, 4);
+  const filteredLessons = (
+    difficulty ? lessons.filter((l) => l.difficulty === difficulty) : lessons
+  ).slice(0, 4);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 grid-bg">
@@ -49,7 +67,8 @@ export default function DashboardPage() {
             <p className="text-slate-400 mt-1">{t.taglineSub}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <LevelSelector />
+            <DifficultySelector />
+            <StudyStyleSelector />
             <Button variant="outline" onClick={launchDemo}>
               <Sparkles className="h-4 w-4" />
               {t.launchDemo}

@@ -3,6 +3,8 @@ import { extractTextFromBuffer } from "@/lib/extract-file-text";
 import { MAX_UPLOAD_BYTES } from "@/lib/file-types";
 
 export const runtime = "nodejs";
+/** Vercel Pro can extend; hobby uses vercel.json (60s) */
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {

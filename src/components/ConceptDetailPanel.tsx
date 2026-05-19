@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Link2, Quote, Lightbulb, HelpCircle, Target } from "lucide-react";
+import { X, Link2, Quote, Lightbulb, HelpCircle, Target, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,7 +12,7 @@ import {
   getConnectionToCoreText,
   getSummarizedPointsForIdea,
 } from "@/lib/guidedRoomLayout";
-import { simplifyTextForLevel } from "@/lib/relationshipHelpers";
+import { simplifyTextForDifficulty } from "@/lib/difficulty";
 import { useAppStore } from "@/store/appStore";
 
 interface ConceptDetailPanelProps {
@@ -22,6 +22,10 @@ interface ConceptDetailPanelProps {
   onClose: () => void;
   onSelectConcept: (id: string) => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
+  /** Nested learning worlds — show “Explore this idea” when subtopics exist */
+  canDiveDeeper?: boolean;
+  onDiveDeeper?: () => void;
+  layerDepth?: number;
 }
 
 export function ConceptDetailPanel({
@@ -31,23 +35,26 @@ export function ConceptDetailPanel({
   onClose,
   onSelectConcept,
   onSelectConnection,
+  canDiveDeeper = false,
+  onDiveDeeper,
+  layerDepth = 0,
 }: ConceptDetailPanelProps) {
-  const { language, level, t } = useAppStore();
+  const { language, difficulty, t } = useAppStore();
 
-  const summary = simplifyTextForLevel(
+  const summary = simplifyTextForDifficulty(
     resolveText(concept.summary, language),
-    level
+    difficulty
   );
   const why = concept.whyItMatters
-    ? simplifyTextForLevel(resolveText(concept.whyItMatters, language), level)
+    ? simplifyTextForDifficulty(resolveText(concept.whyItMatters, language), difficulty)
     : t.whyMatters;
   const tip = concept.studyTip
-    ? simplifyTextForLevel(resolveText(concept.studyTip, language), level)
+    ? simplifyTextForDifficulty(resolveText(concept.studyTip, language), difficulty)
     : undefined;
 
-  const connectsToMain = simplifyTextForLevel(
+  const connectsToMain = simplifyTextForDifficulty(
     getConnectionToCoreText(room, concept, coreTitle, language),
-    level
+    difficulty
   );
 
   const keyPoints = getSummarizedPointsForIdea(room, concept, language);
@@ -89,6 +96,22 @@ export function ConceptDetailPanel({
       <ScrollArea className="flex-1 p-4">
         <p className="text-xs text-cyan-400/80 mb-1">{importanceLabel}</p>
         <h2 className="text-xl font-bold mb-4">{resolveText(concept.title, language)}</h2>
+
+        {canDiveDeeper && onDiveDeeper && (
+          <Button
+            className="w-full mb-5 gap-2"
+            onClick={onDiveDeeper}
+          >
+            <Compass className="h-4 w-4" />
+            {t.exploreThisIdea}
+          </Button>
+        )}
+
+        {layerDepth > 0 && (
+          <p className="text-xs text-violet-400/80 mb-4">
+            {t.currentLearningLayer} · {t.diveDeeperHint}
+          </p>
+        )}
 
         <section className="mb-5">
           <h3 className="text-sm font-medium text-cyan-300 mb-2">{t.whatItMeans}</h3>

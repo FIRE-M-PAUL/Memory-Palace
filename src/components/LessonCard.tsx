@@ -27,8 +27,8 @@ export function LessonCard({ lesson }: { lesson: Lesson }) {
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Badge variant="secondary">{t.subjects[lesson.subject]}</Badge>
-        <Badge variant="outline">{t.levels[lesson.level]}</Badge>
-        <Badge>{lesson.concepts.length} concepts</Badge>
+        <Badge variant="outline">{t.difficulties[lesson.difficulty]}</Badge>
+        <Badge>{lesson.concepts.length} {t.ideasCount}</Badge>
       </div>
     </Link>
   );
