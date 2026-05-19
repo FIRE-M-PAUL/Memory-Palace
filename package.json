@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.475.0",
-    "next": "15.3.3",
+    "next": "15.3.6",
     "officeparser": "^5.2.2",
     "openai": "^4.86.2",
     "react": "^19.0.0",
@@ -47,7 +47,7 @@
     "@types/three": "^0.174.0",
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
-    "eslint-config-next": "15.3.3",
+    "eslint-config-next": "15.3.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
