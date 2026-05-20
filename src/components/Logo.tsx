@@ -32,11 +32,11 @@ export function Logo({ variant = "icon", className, href, priority = false }: Lo
       <Image
         src={LOGO_SRC}
         alt="MEMORY PALACE"
-        width={280}
-        height={220}
+        width={360}
+        height={280}
         priority={priority}
         className={cn(
-          "w-[140px] sm:w-[200px] md:w-[240px] lg:w-[280px] max-h-[140px] sm:max-h-[170px] md:max-h-[200px] lg:max-h-[220px] object-contain object-top drop-shadow-[0_0_28px_rgba(34,211,238,0.2)]",
+          "w-[170px] sm:w-[230px] md:w-[300px] lg:w-[340px] xl:w-[360px] max-h-[220px] sm:max-h-[240px] md:max-h-[260px] lg:max-h-[280px] object-contain object-top drop-shadow-[0_0_28px_rgba(34,211,238,0.2)]",
           className
         )}
       />

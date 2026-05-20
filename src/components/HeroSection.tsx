@@ -51,7 +51,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-0 pt-20 pb-8 px-4 sm:px-6 overflow-hidden">
+    <section className="relative min-h-0 pt-12 md:pt-14 pb-6 px-4 sm:px-6 overflow-hidden">
       <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" aria-hidden />
       <div
         className="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"
@@ -63,22 +63,22 @@ export function HeroSection() {
       />
 
       <div className="relative mx-auto max-w-7xl">
-        <div className="text-center max-w-4xl mx-auto mb-8">
-          <p className="inline-flex items-center justify-center rounded-full glass border border-cyan-500/30 bg-cyan-500/5 px-4 py-2 mb-5 text-xs sm:text-sm text-cyan-200/95 tracking-wide shadow-[0_0_28px_rgba(34,211,238,0.15)] backdrop-blur-md max-w-[95vw]">
-            {t.tagline}
-          </p>
-
-          <div className="flex justify-center mb-4">
-            <Logo variant="hero" href={null} priority />
+        <div className="text-center max-w-4xl mx-auto mb-6">
+          <div className="flex justify-center mb-3">
+            <Logo variant="hero" href={null} priority className="object-contain" />
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-3">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-2.5">
             <span className="gradient-text neon-text">MEMORY</span>
             <br />
             <span className="text-slate-100">PALACE</span>
           </h1>
 
-          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto mb-6 leading-relaxed">
+          <p className="text-cyan-200/90 text-sm sm:text-base max-w-xl mx-auto mb-2.5 leading-relaxed">
+            {t.tagline}
+          </p>
+
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto mb-5 leading-relaxed">
             {t.taglineSub}
           </p>
 
