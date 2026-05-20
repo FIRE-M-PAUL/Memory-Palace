@@ -85,12 +85,14 @@ export function AskPalaceChat({ roomId, room }: AskPalaceChatProps) {
         if (activeIndex) setIndex(activeIndex);
       }
 
-      const { answer, meta, grounded } = await askRoomWithRAG(
+      const { answer, meta, grounded, refused } = await askRoomWithRAG(
         question,
         room,
         language,
         activeIndex
       );
+
+      const isGrounded = grounded === true && refused !== true;
 
       saveChatMessage(roomId, {
         id: uuidv4(),
@@ -102,10 +104,10 @@ export function AskPalaceChat({ roomId, room }: AskPalaceChatProps) {
               confidence: meta.confidence,
               chunkIds: meta.chunkIds,
               conceptId: meta.conceptId,
-              grounded,
+              grounded: isGrounded,
               engine: meta.provider,
             }
-          : undefined,
+          : { grounded: isGrounded },
       });
     } catch {
       saveChatMessage(roomId, {
@@ -174,11 +176,13 @@ export function AskPalaceChat({ roomId, room }: AskPalaceChatProps) {
               className={`rounded-xl p-3 text-sm ${
                 m.role === "user"
                   ? "bg-cyan-500/10 border border-cyan-500/20 ml-4"
-                  : "bg-slate-800/50 mr-4"
+                  : m.meta?.grounded === false
+                    ? "bg-amber-500/5 border border-amber-500/20 mr-4"
+                    : "bg-slate-800/50 mr-4"
               }`}
             >
-              <p className="whitespace-pre-wrap text-slate-300">{m.content}</p>
-              {m.role === "assistant" && m.meta?.grounded !== false && (
+              <p className="whitespace-pre-wrap text-slate-300 break-words">{m.content}</p>
+              {m.role === "assistant" && m.meta?.grounded === true && (
                 <div className="mt-2 flex items-center gap-2">
                   <button
                     type="button"

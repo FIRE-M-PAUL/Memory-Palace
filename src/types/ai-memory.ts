@@ -83,18 +83,31 @@ export interface RAGRetrievalHit {
   score: number;
 }
 
+export type RAGRefusalReason =
+  | "off-topic"
+  | "empty-index"
+  | "no-retrieval"
+  | "low-confidence"
+  | "no-lexical-match"
+  | "room-mismatch";
+
 export interface RAGAnswerMeta {
   provider: EmbeddingProvider;
   confidence: number;
   chunkIds: string[];
   conceptId?: string;
   intent: string;
+  /** Present when strict RAG refused to answer outside the notes */
+  refusalReason?: RAGRefusalReason;
+  strictMode?: boolean;
+  systemDirective?: string;
 }
 
 export interface RAGAnswerResult {
   answer: string;
   meta: RAGAnswerMeta;
   grounded: boolean;
+  refused?: boolean;
 }
 
 export interface IndexRoomRequest {

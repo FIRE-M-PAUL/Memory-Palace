@@ -13,7 +13,8 @@ import type {
 } from "@/types/ai-memory";
 
 const INDEX_VERSION = 1;
-const MIN_RETRIEVAL_SCORE = 0.12;
+/** Default floor; strict RAG passes provider-specific minimum via retrieveFromIndex. */
+const DEFAULT_MIN_RETRIEVAL_SCORE = 0.12;
 
 function chunkRecord(
   roomId: string,
@@ -144,20 +145,21 @@ export async function buildRoomIndex(
 export function retrieveFromIndex(
   index: RoomKnowledgeIndex,
   queryVector: number[],
-  topK = 5
+  topK = 5,
+  minScore = DEFAULT_MIN_RETRIEVAL_SCORE
 ): RAGRetrievalHit[] {
   const hits: RAGRetrievalHit[] = [];
   for (const chunk of index.chunks) {
     if (chunk.vector.length !== queryVector.length) continue;
     let score = cosineSimilarity(queryVector, chunk.vector);
     score *= 0.85 + chunk.confidence * 0.15;
-    if (chunk.importance === "high") score *= 1.08;
+    if (chunk.importance === "high") score *= 1.05;
     const conf = index.conceptConfidence.find((c) => c.conceptId === chunk.conceptId);
-    if (conf) score *= 0.9 + Math.min(conf.score, 1) * 0.1;
+    if (conf) score *= 0.92 + Math.min(conf.score, 1) * 0.08;
     hits.push({ chunk, score });
   }
   hits.sort((a, b) => b.score - a.score);
-  return hits.filter((h) => h.score >= MIN_RETRIEVAL_SCORE).slice(0, topK);
+  return hits.filter((h) => h.score >= minScore).slice(0, topK);
 }
 
 export function mergeQueryVector(hits: RAGRetrievalHit[]): number[] | null {

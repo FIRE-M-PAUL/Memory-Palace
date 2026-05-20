@@ -13,7 +13,8 @@ Upload → Chunk + Extract concepts → Embeddings → Vector memory
 |--------|------|
 | `embeddings.ts` | OpenAI `text-embedding-3-small` when `OPENAI_API_KEY` is set; otherwise local TF-IDF vectors |
 | `vectorIndex.ts` | Index rooms (chunks, concepts, relationships); cosine retrieval |
-| `ragAnswer.ts` | RAG answers grounded in retrieved chunks + document phrasing |
+| `ragPolicy.ts` | Strict thresholds, lexical grounding, off-topic refusal (no general AI) |
+| `ragAnswer.ts` | Document-only RAG answers from retrieved chunks (no lexical fallback) |
 | `ingestPipeline.ts` | Post-upload indexing + relationship evolution |
 | `feedbackEngine.ts` | Human-in-the-loop confidence adjustments |
 | `learningProfile.ts` | Per-user interaction memory (local) |
@@ -24,7 +25,7 @@ Upload → Chunk + Extract concepts → Embeddings → Vector memory
 ## API routes
 
 - `POST /api/ai/index-room` — build/update vector index after upload
-- `POST /api/ask-room` — RAG Q&A (optional client index in body)
+- `POST /api/ask-room` — strict RAG Q&A; refuses when retrieval confidence is low (optional client index in body)
 - `POST /api/ai/feedback` — thumbs up/down updates chunk confidence
 
 ## Environment

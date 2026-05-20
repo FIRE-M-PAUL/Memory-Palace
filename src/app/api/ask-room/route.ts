@@ -28,8 +28,9 @@ export async function POST(request: NextRequest) {
       answer: result.answer,
       meta: result.meta,
       grounded: result.grounded,
+      refused: result.refused ?? !result.grounded,
       usedMock: false,
-      engine: result.grounded ? "rag" : "lexical-fallback",
+      engine: result.grounded ? "rag-strict" : "rag-refused",
     });
   } catch (error) {
     console.error("ask-room error:", error);

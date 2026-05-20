@@ -40,7 +40,12 @@ export async function askRoomWithRAG(
   room: KnowledgeRoom,
   language: LanguageCode,
   index: RoomKnowledgeIndex | null
-): Promise<{ answer: string; meta?: RAGAnswerMeta; grounded?: boolean }> {
+): Promise<{
+  answer: string;
+  meta?: RAGAnswerMeta;
+  grounded?: boolean;
+  refused?: boolean;
+}> {
   const res = await fetch("/api/ask-room", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

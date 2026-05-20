@@ -93,10 +93,20 @@ export const en = {
   presentation: "Guided Lesson",
   askPalace: "Ask Your Notes",
   askWarning:
-    "Ask about your uploaded document. Answers use the exact ideas, importance, and explanations from your notes — not outside knowledge.",
-  askPlaceholder: "Ask about your lesson...",
+    "Document-only assistant: answers come strictly from this room's uploaded notes. Unrelated questions (e.g. general trivia or math) are refused.",
+  askPlaceholder: "Ask about your uploaded notes...",
   askNotFound:
-    "I can only answer questions about your uploaded document. Please ask something based on your notes or one of the ideas in your memory palace.",
+    "No such content was found in your notes. Please ask questions related to your uploaded document.",
+  ragRefusalOffTopic:
+    "No such content was found in your notes. I can only answer based on your uploaded document — not general knowledge.",
+  ragRefusalNoMatch:
+    "No relevant information was found in \"{room}\" for that question. Please ask about your uploaded notes or study map ideas.",
+  ragRefusalLowMatch:
+    "That question does not match your uploaded notes in \"{room}\". Please ask about content from your document.",
+  ragRefusalNoIndex:
+    "This memory room has no indexed notes yet. Upload or add content, then try again.",
+  ragRefusalRoomMismatch:
+    "That information does not exist in the current memory room. Please ask about this room's uploaded notes only.",
   correct: "Correct. You understood this idea well.",
   incorrect: "Not quite. Here is a hint to help you.",
   almostThere: "Almost there",
