@@ -38,23 +38,67 @@ function ConceptNodeInner({
   profile,
 }: ConceptNodeProps) {
   const language = useAppStore((s) => s.language);
+  const t = useAppStore((s) => s.t);
   const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
   const lastTapRef = useRef(0);
+  const touchPulse = useRef(0);
   const color = getClusterColor(concept.cluster);
   const segments = profile.sphereSegments;
   const baseScale =
     concept.importance === "high" ? 0.38 : concept.importance === "medium" ? 0.3 : 0.24;
-  const scale = profile.isMobile ? baseScale * 1.15 : baseScale;
+  const scale = baseScale * profile.nodeScaleMultiplier;
   const active = selected || hovered || highlighted;
   const showLabel = profile.labelMode === "all" || (profile.isMobile ? selected : active);
-  const shouldFloat = profile.enableNodeFloat && (active || selected) && !dimmed;
   const hitScale = scale * profile.nodeHitScale;
+  const mobileAlive = profile.isMobile && !profile.isReducedMotion;
 
-  useFrame((state) => {
-    if (!shouldFloat || !meshRef.current) return;
-    meshRef.current.position.y =
-      position.y + Math.sin(state.clock.elapsedTime * 0.45 + concept.id.length) * 0.035;
+  useFrame((state, delta) => {
+    const mesh = meshRef.current;
+    const glow = glowRef.current;
+    if (!mesh) return;
+
+    touchPulse.current = THREE.MathUtils.damp(touchPulse.current, 0, 14, delta);
+
+    const tClock = state.clock.elapsedTime;
+    const phase = concept.id.length * 0.17;
+    let floatAmp = 0;
+    if (profile.enableNodeFloat && !profile.isReducedMotion) {
+      if (profile.isMobile) {
+        floatAmp = dimmed ? 0.014 : active || selected ? 0.048 : 0.026;
+      } else {
+        floatAmp = (active || selected) && !dimmed ? 0.035 : 0;
+      }
+    }
+    mesh.position.y =
+      floatAmp > 0 ? Math.sin(tClock * 0.52 + phase) * floatAmp : 0;
+    if (glow && mobileAlive) {
+      glow.position.y = mesh.position.y;
+    }
+
+    const pulseBoost = touchPulse.current * 0.14;
+    const breath =
+      mobileAlive || (!profile.isMobile && profile.enableNodeFloat && !profile.isReducedMotion)
+        ? Math.sin(tClock * 1.25 + phase) * (dimmed ? 0.04 : 0.12)
+        : 0;
+
+    const targetScale =
+      scale *
+      (active ? 1.2 : 1) *
+      (1 + pulseBoost + (selected ? 0.06 : 0) + (dimmed ? 0 : breath * 0.04));
+
+    mesh.scale.setScalar(targetScale);
+
+    if (glow && mobileAlive) {
+      const glowPulse = 1 + Math.sin(tClock * 0.9 + phase) * 0.08 + touchPulse.current * 0.2;
+      glow.scale.setScalar(targetScale * 1.42 * glowPulse);
+    }
   });
+
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    if (!dimmed) touchPulse.current = 1;
+  };
 
   const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
@@ -77,13 +121,15 @@ function ConceptNodeInner({
     lastTapRef.current = now;
   };
 
-  const opacity = dimmed ? 0.1 : active ? 0.92 : 0.72;
-  const emissive = dimmed ? 0.08 : active ? 1.1 : 0.5;
+  const opacity = dimmed ? 0.14 : active ? 0.95 : 0.78;
+  const emissiveBase = dimmed ? 0.12 : active ? 1.15 : 0.55;
+  const emissive = emissiveBase + (mobileAlive && !dimmed ? 0.15 : 0);
 
   return (
     <group position={[position.x, position.y, position.z]}>
       {/* Large invisible hit target for touch */}
       <mesh
+        onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerOver={(e) => {
           if (dimmed) return;
@@ -102,23 +148,42 @@ function ConceptNodeInner({
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      <mesh ref={meshRef} scale={active ? scale * 1.22 : scale} frustumCulled>
+      {mobileAlive && !dimmed && (
+        <mesh ref={glowRef} scale={scale * 1.38} frustumCulled>
+          <sphereGeometry args={[1, Math.max(segments, 10), Math.max(segments, 10)]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.11}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      )}
+
+      <mesh ref={meshRef} frustumCulled>
         <sphereGeometry args={[1, segments, segments]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
           emissiveIntensity={emissive}
-          metalness={profile.isMobile ? 0.5 : 0.75}
-          roughness={profile.isMobile ? 0.4 : 0.25}
+          metalness={profile.isMobile ? 0.35 : 0.75}
+          roughness={profile.isMobile ? 0.38 : 0.25}
           transparent={dimmed}
           opacity={opacity}
         />
       </mesh>
 
-      {active && !dimmed && !profile.isMobile && (
-        <mesh scale={scale * 1.65} frustumCulled>
-          <sphereGeometry args={[1, 10, 10]} />
-          <meshBasicMaterial color={color} transparent opacity={0.12} />
+      {active && !dimmed && (
+        <mesh scale={scale * 1.72} frustumCulled renderOrder={-1}>
+          <sphereGeometry args={[1, Math.min(segments + 4, 16), Math.min(segments + 4, 16)]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={profile.isMobile ? 0.18 : 0.12}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
         </mesh>
       )}
 
@@ -136,7 +201,7 @@ function ConceptNodeInner({
                 : "px-2 py-1 text-xs whitespace-nowrap"
             } ${
               selected
-                ? "bg-cyan-500/35 border-cyan-400/60 text-cyan-50 shadow-lg shadow-cyan-500/20"
+                ? "bg-cyan-500/35 border-cyan-400/60 text-cyan-50 shadow-lg shadow-cyan-500/25"
                 : highlighted
                   ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-100"
                   : "bg-slate-900/90 border-slate-600/50 text-slate-300"
@@ -144,8 +209,8 @@ function ConceptNodeInner({
           >
             {resolveText(concept.title, language)}
             {profile.isMobile && selected && onDive && (
-              <p className="text-[10px] text-cyan-200/80 mt-1 font-normal">
-                Double-tap to explore
+              <p className="text-[10px] text-cyan-200/85 mt-1 font-normal">
+                {t.doubleTapExplore}
               </p>
             )}
           </div>

@@ -11,34 +11,46 @@ interface CentralCoreTopicProps {
 }
 
 function CentralCoreTopicInner({ title, pulse = true, profile }: CentralCoreTopicProps) {
-  const label = title.length > 42 ? `${title.slice(0, 40)}…` : title;
+  const maxLen = profile.isMobile ? 28 : 42;
+  const label = title.length > maxLen ? `${title.slice(0, maxLen - 1)}…` : title;
   const segments = profile.sphereSegments;
 
   const core = (
     <group position={[0, 0, 0]}>
       <mesh frustumCulled>
-        <icosahedronGeometry args={[0.75, 0]} />
+        <icosahedronGeometry args={[profile.coreWireScale, 0]} />
         <meshStandardMaterial
           color="#a78bfa"
           emissive="#a78bfa"
-          emissiveIntensity={pulse ? 1.5 : 1}
+          emissiveIntensity={pulse ? (profile.isMobile ? 1.1 : 1.5) : 1}
           metalness={0.85}
           roughness={0.15}
           wireframe
         />
       </mesh>
       <mesh frustumCulled>
-        <sphereGeometry args={[0.45, segments, segments]} />
+        <sphereGeometry args={[profile.coreInnerScale, segments, segments]} />
         <meshStandardMaterial
           color="#22d3ee"
           emissive="#22d3ee"
-          emissiveIntensity={1.8}
+          emissiveIntensity={profile.isMobile ? 1.4 : 1.8}
           transparent
           opacity={0.85}
         />
       </mesh>
-      <Html position={[0, 1.1, 0]} center distanceFactor={12} style={{ pointerEvents: "none" }}>
-        <div className="px-3 py-1.5 rounded-xl text-center text-xs sm:text-sm font-bold bg-violet-500/25 border border-violet-400/50 text-violet-100 backdrop-blur-md max-w-[200px]">
+      <Html
+        position={[0, profile.coreInnerScale + (profile.isMobile ? 0.42 : 0.55), 0]}
+        center
+        distanceFactor={profile.coreLabelDistance}
+        style={{ pointerEvents: "none" }}
+      >
+        <div
+          className={`text-center font-semibold bg-violet-500/20 border border-violet-400/40 text-violet-100 backdrop-blur-md rounded-lg ${
+            profile.isMobile
+              ? "px-2 py-1 text-[10px] leading-tight max-w-[88px]"
+              : "px-3 py-1.5 text-xs sm:text-sm font-bold max-w-[200px]"
+          }`}
+        >
           {label}
         </div>
       </Html>
@@ -50,7 +62,11 @@ function CentralCoreTopicInner({ title, pulse = true, profile }: CentralCoreTopi
   }
 
   return (
-    <Float speed={0.8} rotationIntensity={0.08} floatIntensity={0.25}>
+    <Float
+      speed={profile.isMobile ? 1.05 : 0.8}
+      rotationIntensity={profile.isMobile ? 0.12 : 0.08}
+      floatIntensity={profile.isMobile ? 0.32 : 0.25}
+    >
       {core}
     </Float>
   );

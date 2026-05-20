@@ -134,7 +134,7 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
       <Input
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
-        placeholder="Your answer..."
+        placeholder={t.practiceAnswerPlaceholder}
         disabled={feedback === "correct"}
       />
       {feedback && (

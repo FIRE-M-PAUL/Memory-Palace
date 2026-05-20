@@ -2,14 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { HeroPreviewLoading } from "@/components/HeroPreviewLoading";
 
 const PreviewCanvas = dynamic(() => import("./3d/HeroPreviewCanvas"), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-[400px] md:h-[500px] rounded-3xl glass flex items-center justify-center">
-      <div className="text-cyan-400 animate-pulse">Loading 3D preview...</div>
-    </div>
-  ),
+  loading: () => <HeroPreviewLoading />,
 });
 
 export function HeroPreview3D() {

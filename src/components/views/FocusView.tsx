@@ -10,7 +10,6 @@ export function FocusView(props: KnowledgeViewProps) {
   return (
     <KnowledgeCanvas
       {...props}
-      view="focus"
       hint={t.focusViewHint}
       onReset={() => props.onSelectConcept(null)}
     />

@@ -7,6 +7,7 @@ import {
   resolveConnectionParties,
 } from "@/lib/guidedRoomLayout";
 import { findRelationship } from "@/lib/relationshipHelpers";
+import { getTranslationsSync } from "@/lib/i18n";
 
 export interface RelationshipExplanation {
   titleA: string;
@@ -25,6 +26,7 @@ export function explainRelationship(
   language: LanguageCode,
   coreTitle?: string
 ): RelationshipExplanation {
+  const t = getTranslationsSync(language);
   const core = coreTitle ?? resolveText(room.title, language);
   const parties = resolveConnectionParties(room, ideaAId, ideaBId, core, language);
 
@@ -66,7 +68,9 @@ export function explainRelationship(
   return {
     titleA: parties.titleA,
     titleB: parties.titleB,
-    connectionType: parties.isCoreLink ? "part of" : rel?.label ?? "relates to",
+    connectionType: parties.isCoreLink
+      ? t.connectionTypes.partOf
+      : rel?.label ?? t.connectionTypes.relatesTo,
     explanation,
     sourceExcerpt,
     studyTip,

@@ -14,6 +14,7 @@ import {
 } from "@/lib/guidedRoomLayout";
 import { simplifyTextForDifficulty } from "@/lib/difficulty";
 import { useAppStore } from "@/store/appStore";
+import { cn } from "@/lib/utils";
 
 interface ConceptDetailPanelProps {
   concept: Concept;
@@ -76,18 +77,24 @@ export function ConceptDetailPanel({
 
   const importanceLabel =
     concept.importance === "high"
-      ? "Very important idea"
+      ? t.importanceHigh
       : concept.importance === "medium"
-        ? "Important idea"
-        : "Supporting idea";
+        ? t.importanceMedium
+        : t.importanceLow;
 
   const shellClass = embedded
-    ? "flex flex-col w-full"
+    ? "flex flex-col w-full bg-transparent"
     : "glass-strong w-full sm:w-96 border-l border-cyan-500/10 flex flex-col h-full max-h-[55vh] lg:max-h-none";
+
 
   return (
     <aside className={shellClass}>
-      <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
+      <div
+        className={cn(
+          "flex items-center justify-between border-b border-slate-700/50",
+          embedded ? "p-3 border-slate-700/30" : "p-4"
+        )}
+      >
         <Badge
           style={{
             color: getClusterColor(concept.cluster),
@@ -101,7 +108,7 @@ export function ConceptDetailPanel({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t.close}
             className="h-10 w-10"
           >
             <X className="h-4 w-4" />
@@ -118,7 +125,7 @@ export function ConceptDetailPanel({
             onClick={onDiveDeeper}
           >
             <Compass className="h-4 w-4" />
-            {t.exploreThisIdea}
+            {t.diveDeeper}
           </Button>
         )}
 

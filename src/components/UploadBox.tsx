@@ -11,6 +11,7 @@ import {
   getFileExtension,
   isPlainTextExtension,
 } from "@/lib/file-types";
+import { useAppStore } from "@/store/appStore";
 
 interface UploadBoxProps {
   onFileContent: (content: string, fileName: string) => void;
@@ -19,6 +20,7 @@ interface UploadBoxProps {
 }
 
 export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) {
+  const t = useAppStore((s) => s.t);
   const [dragActive, setDragActive] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -31,9 +33,7 @@ export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) 
 
       try {
         if (file.size > MAX_UPLOAD_BYTES) {
-          throw new Error(
-            `File is too large. Maximum size is ${MAX_UPLOAD_MB}MB.`
-          );
+          throw new Error(t.fileTooLarge.replace("{mb}", String(MAX_UPLOAD_MB)));
         }
 
         const ext = getFileExtension(file.name);
@@ -52,22 +52,19 @@ export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) 
 
           const data = await res.json();
           if (!res.ok) {
-            throw new Error(data.error || "Failed to extract text from file");
+            throw new Error(data.error || t.fileExtractFailed);
           }
           text = data.text;
         }
 
         if (!text || text.trim().length < 20) {
-          throw new Error(
-            "Not enough readable text in this file. Try a different file or paste content below."
-          );
+          throw new Error(t.fileNotEnoughText);
         }
 
         setFileName(file.name);
         onFileContent(text, file.name);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to read file";
+        const message = err instanceof Error ? err.message : t.fileReadFailed;
         setLocalError(message);
         onError?.(message);
         setFileName(null);
@@ -75,7 +72,7 @@ export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) 
         setExtracting(false);
       }
     },
-    [onFileContent, onError]
+    [onFileContent, onError, t]
   );
 
   const handleDrop = useCallback(
@@ -130,20 +127,21 @@ export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) 
         {extracting ? (
           <div className="flex flex-col items-center gap-3 py-2">
             <Loader2 className="h-10 w-10 text-cyan-400 animate-spin" />
-            <p className="text-slate-200 font-medium">Extracting text from document...</p>
-            <p className="text-sm text-slate-500">PDF, Word, PowerPoint, and more</p>
+            <p className="text-slate-200 font-medium">{t.uploadExtracting}</p>
+            <p className="text-sm text-slate-500">{t.uploadExtractingHint}</p>
           </div>
         ) : fileName ? (
           <div className="flex items-center justify-center gap-3">
             <FileText className="h-8 w-8 text-cyan-400 shrink-0" />
             <div className="text-left min-w-0">
               <p className="font-medium text-slate-200 truncate">{fileName}</p>
-              <p className="text-sm text-emerald-400/90">Text extracted — ready to process</p>
+              <p className="text-sm text-emerald-400/90">{t.uploadReady}</p>
             </div>
             <button
               type="button"
               onClick={clearFile}
               className="ml-2 p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-slate-200 shrink-0"
+              aria-label={t.close}
             >
               <X className="h-4 w-4" />
             </button>
@@ -151,13 +149,13 @@ export function UploadBox({ onFileContent, onError, disabled }: UploadBoxProps) 
         ) : (
           <>
             <Upload className="mx-auto h-10 w-10 text-cyan-400/70 mb-4" />
-            <p className="text-slate-200 font-medium">
-              Drop your document here or click to browse
-            </p>
+            <p className="text-slate-200 font-medium">{t.uploadDrop}</p>
             <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
               {SUPPORTED_FORMATS_LABEL}
             </p>
-            <p className="text-xs text-slate-600 mt-2">Max file size: {MAX_UPLOAD_MB}MB</p>
+            <p className="text-xs text-slate-600 mt-2">
+              {t.uploadMaxSize.replace("{mb}", String(MAX_UPLOAD_MB))}
+            </p>
           </>
         )}
       </div>

@@ -12,7 +12,6 @@ import {
   getCachedLayerRenderPlan,
 } from "@/lib/roomComputeCache";
 import { useViewport } from "@/hooks/useViewport";
-import type { LearningViewMode } from "@/types/learning-views";
 import type { LayerStack } from "@/types/nested-worlds";
 
 interface KnowledgeGraph2DProps {
@@ -24,7 +23,6 @@ interface KnowledgeGraph2DProps {
   onSelectConnection?: (sourceId: string, targetId: string) => void;
   showStudyPath?: boolean;
   routeConceptIds?: string[];
-  learningView?: LearningViewMode;
   layerStack: LayerStack;
   transitioning?: boolean;
 }
@@ -44,7 +42,6 @@ export function KnowledgeGraph2D({
   onSelectConnection,
   showStudyPath = false,
   routeConceptIds = [],
-  learningView = "focus",
   layerStack,
   transitioning = false,
 }: KnowledgeGraph2DProps) {
@@ -83,16 +80,8 @@ export function KnowledgeGraph2D({
   );
 
   const layerPlan = useMemo(
-    () =>
-      getCachedLayerRenderPlan(
-        room,
-        layerStack,
-        learningView,
-        layout,
-        profile,
-        language
-      ),
-    [room, layerStack, learningView, layout, profile, language]
+    () => getCachedLayerRenderPlan(room, layerStack, layout, profile, language),
+    [room, layerStack, layout, profile, language]
   );
 
   const visible = layerPlan.visibleConcepts;

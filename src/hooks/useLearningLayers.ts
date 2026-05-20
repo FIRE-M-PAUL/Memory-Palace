@@ -14,7 +14,7 @@ import {
   leaveLayer,
 } from "@/lib/layerNavigation";
 
-const TRANSITION_MS = 320;
+const TRANSITION_MS = 480;
 
 export function useLearningLayers(
   room: KnowledgeRoom | null,

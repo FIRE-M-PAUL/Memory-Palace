@@ -15,6 +15,7 @@ import { getLessonById, lessonToRoom } from "@/lib/curriculum";
 import { BUILT_IN_LESSONS } from "@/lib/curriculum";
 import { setDefaultRoomView, type DefaultRoomView } from "@/lib/progressStorage";
 import { useAppStore } from "@/store/appStore";
+import { CreatePageFallback } from "@/components/CreatePageFallback";
 import { resolveText } from "@/lib/multilingual";
 
 function CreatePageContent() {
@@ -231,9 +232,7 @@ function CreatePageContent() {
 export default function CreatePage() {
   return (
     <Suspense
-      fallback={
-        <div className="min-h-screen pt-24 text-center text-slate-500">Loading...</div>
-      }
+      fallback={<CreatePageFallback />}
     >
       <CreatePageContent />
     </Suspense>

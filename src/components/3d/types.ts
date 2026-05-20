@@ -1,5 +1,4 @@
 import type { KnowledgeRoom } from "@/types/memory-palace";
-import type { LearningViewMode } from "@/types/learning-views";
 import type { LayerStack } from "@/types/nested-worlds";
 
 export interface KnowledgeViewProps {
@@ -9,7 +8,6 @@ export interface KnowledgeViewProps {
   onSelectConnection?: (sourceId: string, targetId: string) => void;
   showStudyPath?: boolean;
   routeConceptIds?: string[];
-  view: LearningViewMode;
   layerStack: LayerStack;
   layerKey: string;
   transitioning?: boolean;

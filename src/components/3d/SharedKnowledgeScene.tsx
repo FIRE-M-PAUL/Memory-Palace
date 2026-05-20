@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { MapLegendPanel } from "@/components/MapLegendPanel";
 import type { Concept, Relationship } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
-import type { LearningViewMode } from "@/types/learning-views";
 import { CORE_TOPIC_ID, type GuidedLayout } from "@/lib/guidedRoomLayout";
 import {
   getCachedGuidedLayout,
@@ -31,7 +30,8 @@ import type { PerformanceProfile } from "@/lib/performanceProfile";
 import type { LayerStack } from "@/types/nested-worlds";
 import { useAppStore } from "@/store/appStore";
 import { useViewport } from "@/hooks/useViewport";
-import { MobileSceneToolbar } from "@/components/3d/MobileSceneToolbar";
+import { MobileControls } from "@/components/MobileControls";
+import { cn } from "@/lib/utils";
 
 interface SceneProps {
   room: KnowledgeRoom;
@@ -40,11 +40,11 @@ interface SceneProps {
   onConceptActivate: (conceptId: string) => void;
   onConceptDive?: (conceptId: string) => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
-  view: LearningViewMode;
   layout: GuidedLayout;
   layerStack: LayerStack;
   profile: PerformanceProfile;
   focusCameraTrigger?: number;
+  transitioning?: boolean;
 }
 
 const CoreConnectionLines = memo(function CoreConnectionLines({
@@ -53,14 +53,12 @@ const CoreConnectionLines = memo(function CoreConnectionLines({
   highlightedIds,
   dimmedIds,
   onLineClick,
-  dashed,
 }: {
   mainIdeas: Concept[];
   positionCache: Map<string, { x: number; y: number; z: number }>;
   highlightedIds: Set<string>;
   dimmedIds: Set<string>;
   onLineClick?: (source: string, target: string) => void;
-  dashed?: boolean;
 }) {
   const origin = useMemo(() => new THREE.Vector3(0, 0, 0), []);
 
@@ -96,12 +94,12 @@ const CoreConnectionLines = memo(function CoreConnectionLines({
         <Line
           key={`core-${id}`}
           points={[origin, target]}
-          color={lit ? "#22d3ee" : "#8b5cf6"}
-          lineWidth={lit ? 2 : 1}
+          color={lit ? "#5eead4" : "#a78bfa"}
+          lineWidth={lit ? 1.8 : 1.1}
           transparent
-          opacity={dim ? 0.08 : lit ? 0.9 : 0.5}
-          dashed={dashed}
-          dashScale={dashed ? 2 : undefined}
+          opacity={dim ? 0.06 : lit ? 0.88 : 0.38}
+          dashed
+          dashScale={2.2}
           onClick={(e) => {
             e.stopPropagation();
             onLineClick?.(CORE_TOPIC_ID, id);
@@ -162,10 +160,12 @@ const IdeaConnectionLines = memo(function IdeaConnectionLines({
         <Line
           key={key}
           points={[start, end]}
-          color={lit ? "#22d3ee" : "#6366f1"}
-          lineWidth={lit ? 2 : 1}
+          color={lit ? "#5eead4" : "#818cf8"}
+          lineWidth={lit ? 1.6 : 1}
           transparent
-          opacity={dim ? 0.06 : lit ? 0.85 : 0.28}
+          opacity={dim ? 0.05 : lit ? 0.75 : 0.22}
+          dashed
+          dashScale={2.5}
           onClick={(e) => {
             e.stopPropagation();
             onLineClick?.(rel.source, rel.target);
@@ -176,11 +176,17 @@ const IdeaConnectionLines = memo(function IdeaConnectionLines({
   );
 });
 
-const SceneLighting = memo(function SceneLighting() {
+const SceneLighting = memo(function SceneLighting({ mobile }: { mobile: boolean }) {
   return (
     <>
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[6, 10, 4]} intensity={0.9} color="#e0f2fe" />
+      <ambientLight intensity={mobile ? 0.38 : 0.45} />
+      <directionalLight position={[6, 10, 4]} intensity={mobile ? 0.72 : 0.9} color="#e0f2fe" />
+      {mobile && (
+        <>
+          <pointLight position={[-4, 3, 6]} intensity={0.35} color="#22d3ee" distance={28} decay={2} />
+          <pointLight position={[5, -2, -4]} intensity={0.22} color="#a78bfa" distance={24} decay={2} />
+        </>
+      )}
     </>
   );
 });
@@ -188,13 +194,15 @@ const SceneLighting = memo(function SceneLighting() {
 function OrbitRing({
   children,
   active,
+  speed,
 }: {
   children: ReactNode;
   active: boolean;
+  speed: number;
 }) {
   const ref = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
-    if (ref.current && active) ref.current.rotation.y += delta * 0.035;
+    if (ref.current && active && speed > 0) ref.current.rotation.y += delta * speed;
   });
   return <group ref={ref}>{children}</group>;
 }
@@ -206,11 +214,11 @@ const SceneContent = memo(function SceneContent({
   onConceptActivate,
   onConceptDive,
   onSelectConnection,
-  view,
   layout,
   layerStack,
   profile,
   focusCameraTrigger = 0,
+  transitioning = false,
 }: SceneProps) {
   const { language } = useAppStore();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -218,9 +226,8 @@ const SceneContent = memo(function SceneContent({
   const focusId = selectedId;
 
   const layerPlan = useMemo(
-    () =>
-      getCachedLayerRenderPlan(room, layerStack, view, layout, profile, language),
-    [room, layerStack, view, layout, profile, language]
+    () => getCachedLayerRenderPlan(room, layerStack, layout, profile, language),
+    [room, layerStack, layout, profile, language]
   );
 
   const {
@@ -264,15 +271,11 @@ const SceneContent = memo(function SceneContent({
     return p ? new THREE.Vector3(p.x, p.y, p.z) : null;
   }, [focusId, positionCache]);
 
-  const showPedestals =
-    profile.showPedestals && (view === "explore" || view === "room");
-  const showFloor =
-    profile.showDecorFloor && (view === "room" || view === "explore");
+  const showPedestals = false;
+  const showFloor = false;
   const orbitActive =
-    view === "focus" && layerDepth === 0 && !focusId && profile.enableOrbitSpin;
-
-  const bg =
-    view === "creative" ? "#0c1929" : view === "explore" ? "#050810" : "#030712";
+    layerDepth === 0 && !focusId && profile.enableOrbitSpin && profile.orbitRingSpeed > 0;
+  const bg = "#030712";
 
   const pedestalPositions = useMemo(
     () =>
@@ -290,8 +293,8 @@ const SceneContent = memo(function SceneContent({
     setHoveredId(h ? conceptId : null);
   }, []);
 
-  const showPeerLines = layerDepth > 0;
-
+  const showPeerLines = layerDepth > 0 && !profile.isMobile;
+  const showCoreLines = !profile.isMobile;
   const nodeElements = useMemo(() => {
     return visibleConcepts.map((concept) => {
       const pos = positionCache.get(concept.id);
@@ -338,33 +341,30 @@ const SceneContent = memo(function SceneContent({
     handleHover,
   ]);
 
-  return (
+  const content = (
     <>
       <color attach="background" args={[bg]} />
-      <fog
-        attach="fog"
-        args={[bg, 12, view === "creative" ? profile.fogFar + 8 : profile.fogFar]}
-      />
-      <SceneLighting />
+      <fog attach="fog" args={[bg, 10, profile.fogFar * (transitioning ? 0.92 : 1)]} />
+      <SceneLighting mobile={profile.isMobile} />
 
-      {view !== "creative" && profile.starCount > 0 && (
+      {profile.starCount > 0 && (
         <Stars
-          radius={60}
-          depth={40}
+          radius={profile.isMobile ? 45 : 60}
+          depth={profile.isMobile ? 28 : 40}
           count={profile.starCount}
-          factor={3}
+          factor={profile.isMobile ? 2.4 : 3}
           fade
-          speed={0.5}
+          speed={profile.isMobile ? 0.35 : 0.5}
         />
       )}
-      {profile.enableSparkles && profile.sparkleCount > 0 && view === "explore" && (
+      {profile.enableSparkles && profile.sparkleCount > 0 && (
         <Sparkles
           count={profile.sparkleCount}
-          scale={12}
-          size={1.5}
-          speed={0.2}
-          opacity={0.25}
-          color="#22d3ee"
+          scale={profile.isMobile ? 16 : 12}
+          size={profile.isMobile ? 1.2 : 1.5}
+          speed={profile.isMobile ? 0.12 : 0.2}
+          opacity={profile.isMobile ? 0.35 : 0.25}
+          color="#67e8f9"
         />
       )}
 
@@ -374,20 +374,10 @@ const SceneContent = memo(function SceneContent({
             <circleGeometry args={[profile.floorRadius, profile.floorSegments]} />
             <meshStandardMaterial color="#0f172a" metalness={0.15} roughness={0.9} />
           </mesh>
-          {view === "room" && !profile.isMobile && (
-            <mesh position={[0, 0.2, 0]}>
-              <cylinderGeometry args={[1.2, 1.4, 0.25, 12]} />
-              <meshStandardMaterial
-                color="#422006"
-                emissive="#78350f"
-                emissiveIntensity={0.12}
-              />
-            </mesh>
-          )}
         </>
       )}
 
-      {view === "focus" && profile.enableInfiniteGrid && (
+      {profile.enableInfiniteGrid && (
         <Grid
           position={[0, -3, 0]}
           args={[24, 24]}
@@ -418,14 +408,15 @@ const SceneContent = memo(function SceneContent({
         forceFocus={focusCameraTrigger > 0}
       />
 
-      <CoreConnectionLines
-        mainIdeas={visibleConcepts}
-        positionCache={positionCache}
-        highlightedIds={highlightIds}
-        dimmedIds={dimmedIds}
-        onLineClick={onSelectConnection}
-        dashed={view === "room"}
-      />
+      {showCoreLines && (
+        <CoreConnectionLines
+          mainIdeas={visibleConcepts}
+          positionCache={positionCache}
+          highlightedIds={highlightIds}
+          dimmedIds={dimmedIds}
+          onLineClick={onSelectConnection}
+        />
+      )}
 
       {showPeerLines && peerRelationships.length > 0 && (
         <IdeaConnectionLines
@@ -437,11 +428,9 @@ const SceneContent = memo(function SceneContent({
         />
       )}
 
-      {view === "focus" ? (
-        <OrbitRing active={orbitActive}>{nodeElements}</OrbitRing>
-      ) : (
-        nodeElements
-      )}
+      <OrbitRing active={orbitActive} speed={profile.orbitRingSpeed}>
+        {nodeElements}
+      </OrbitRing>
 
       <OrbitControls
         ref={controlsRef}
@@ -453,17 +442,23 @@ const SceneContent = memo(function SceneContent({
         rotateSpeed={profile.rotateSpeed}
         minDistance={profile.orbitMinDistance}
         maxDistance={
-          focusId
-            ? profile.orbitMaxDistanceFocused
-            : view === "creative"
-              ? profile.orbitMaxDistance + 2
-              : profile.orbitMaxDistance
+          focusId ? profile.orbitMaxDistanceFocused : profile.orbitMaxDistance
         }
         maxPolarAngle={Math.PI / (profile.isMobile ? 2.05 : 1.85)}
         minPolarAngle={profile.isMobile ? 0.35 : 0.2}
+        touches={{
+          ONE: THREE.TOUCH.ROTATE,
+          TWO: THREE.TOUCH.DOLLY_PAN,
+        }}
       />
     </>
   );
+
+  if (profile.sceneLiftY !== 0) {
+    return <group position={[0, profile.sceneLiftY, 0]}>{content}</group>;
+  }
+
+  return content;
 });
 
 export interface KnowledgeCanvasProps {
@@ -472,7 +467,6 @@ export interface KnowledgeCanvasProps {
   onSelectConcept: (id: string | null) => void;
   onConceptActivate: (conceptId: string) => void;
   onSelectConnection?: (sourceId: string, targetId: string) => void;
-  view: LearningViewMode;
   layerStack: LayerStack;
   layerKey: string;
   transitioning?: boolean;
@@ -489,7 +483,6 @@ export function KnowledgeCanvas({
   onConceptActivate,
   onConceptDive,
   onSelectConnection,
-  view,
   layerStack,
   layerKey,
   transitioning = false,
@@ -511,27 +504,36 @@ export function KnowledgeCanvas({
     setFocusCameraTrigger((n) => n + 1);
   }, [onReset]);
 
-  const cameraPosition = useMemo((): [number, number, number] => {
-    if (view === "creative" && !profile.isMobile) {
-      return [0, 5.5, 13];
-    }
-    return profile.cameraDefault;
-  }, [view, profile]);
+  const cameraPosition = useMemo(
+    (): [number, number, number] => profile.cameraDefault,
+    [profile]
+  );
 
   return (
-    <div className="w-full h-full min-h-[420px] rounded-2xl overflow-hidden border border-cyan-500/10 flex flex-col">
+    <div
+      className={cn(
+        "w-full flex flex-col overflow-hidden",
+        isMobile
+          ? "h-[min(70dvh,580px)] min-h-[312px] rounded-xl border border-cyan-400/20 bg-gradient-to-b from-[#071018] via-slate-950/95 to-[#030712] shadow-[0_0_40px_-8px_rgba(34,211,238,0.12)]"
+          : "h-full min-h-[420px] rounded-2xl border border-cyan-500/10"
+      )}
+    >
+      {!isMobile && (
       <div className="flex flex-wrap items-center gap-2 p-2 border-b border-slate-800/80 bg-slate-950/50">
         <Button type="button" size="sm" variant="outline" onClick={handleReset}>
           {t.resetView}
         </Button>
-        <div className="ml-auto hidden md:block max-w-[180px]">
+        <div className="ml-auto max-w-[180px]">
           <MapLegendPanel compact />
         </div>
       </div>
+      )}
       <div
-        className={`flex-1 min-h-[380px] relative transition-opacity duration-300 ${
-          transitioning ? "opacity-40" : "opacity-100"
-        }`}
+          className={cn(
+            "flex-1 relative min-h-0 transition-opacity duration-500 ease-out",
+            isMobile ? "min-h-[280px]" : "min-h-[380px]",
+            transitioning ? "opacity-[0.32]" : "opacity-100"
+          )}
       >
         <Canvas
           key={`${room.id}-${layerKey}-${profile.viewport}`}
@@ -552,26 +554,41 @@ export function KnowledgeCanvas({
               onConceptActivate={onConceptActivate}
               onConceptDive={onConceptDive}
               onSelectConnection={onSelectConnection}
-              view={view}
               layout={layout}
               layerStack={layerStack}
               profile={profile}
               focusCameraTrigger={focusCameraTrigger}
+              transitioning={transitioning}
             />
           </Suspense>
         </Canvas>
         {isMobile && onSwitch2d && (
-          <MobileSceneToolbar
-            hasSelection={!!selectedId}
-            onResetView={handleReset}
-            onFocusSelected={() => setFocusCameraTrigger((n) => n + 1)}
-            onSwitch2d={onSwitch2d}
-          />
+          <>
+            <div
+              className="pointer-events-none absolute inset-0 z-[1] rounded-[inherit] opacity-90"
+              aria-hidden
+              style={{
+                background:
+                  "radial-gradient(ellipse 95% 78% at 50% 42%, transparent 0%, rgba(2,6,23,0.2) 52%, rgba(2,6,23,0.88) 100%)",
+              }}
+            />
+            <div className="absolute top-3 left-3 right-3 z-10 pointer-events-none flex justify-center">
+              <p className="text-[10px] leading-snug tracking-wide text-cyan-100/65 bg-slate-950/45 backdrop-blur-md rounded-full px-3.5 py-1.5 border border-cyan-400/12 max-w-[min(96%,20rem)] text-center shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                {t.mobileSceneHint}
+              </p>
+            </div>
+            <MobileControls
+              hasSelection={!!selectedId}
+              onResetView={handleReset}
+              onFocusSelected={() => setFocusCameraTrigger((n) => n + 1)}
+              onSwitch2d={onSwitch2d}
+            />
+          </>
         )}
       </div>
-      <p className="text-xs text-slate-500 text-center py-2 px-3">
-        {isMobile ? t.mobileSceneHint : hint}
-      </p>
+      {!isMobile && (
+        <p className="text-xs text-slate-500 text-center py-2 px-3">{hint}</p>
+      )}
     </div>
   );
 }

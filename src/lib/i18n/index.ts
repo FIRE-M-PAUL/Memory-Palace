@@ -4,7 +4,9 @@ import {
   getTranslationsSync,
   loadTranslations,
   primeTranslationCache,
+  invalidateTranslationCache,
 } from "./loadTranslations";
+export { defineLocale } from "./defineLocale";
 
 primeTranslationCache("en", en as unknown as TranslationKeys);
 
@@ -23,7 +25,12 @@ export function getTranslations(lang: LanguageCode): TranslationKeys {
   return getTranslationsSync(lang);
 }
 
-export { loadTranslations, getTranslationsSync, primeTranslationCache };
+export {
+  loadTranslations,
+  getTranslationsSync,
+  primeTranslationCache,
+  invalidateTranslationCache,
+};
 
 export function t(lang: LanguageCode, key: keyof TranslationKeys): string {
   const dict = getTranslationsSync(lang);

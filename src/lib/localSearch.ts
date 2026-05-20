@@ -1,6 +1,7 @@
 import type { LanguageCode } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
 import { resolveText } from "@/lib/multilingual";
+import { getTranslationsSync } from "@/lib/i18n";
 
 function scoreText(haystack: string, terms: string[]): number {
   const lower = haystack.toLowerCase();
@@ -23,8 +24,10 @@ export function searchPalace(
     .split(/\s+/)
     .filter((w) => w.length > 2);
 
+  const t = getTranslationsSync(lang);
+
   if (terms.length === 0) {
-    return `Ask about something in "${resolveText(room.title, lang)}". Try one of the ideas on your study map.`;
+    return t.searchAskAbout.replace("{title}", resolveText(room.title, lang));
   }
 
   type Hit = { score: number; title: string; body: string; excerpt?: string };
@@ -57,7 +60,7 @@ export function searchPalace(
       .slice(0, 4)
       .map((c) => resolveText(c.title, lang))
       .join(", ");
-    return `I could not find that in your notes. Try asking about one of these ideas: ${suggestions}.`;
+    return t.searchNotFound.replace("{suggestions}", suggestions);
   }
 
   const best = hits[0];
@@ -79,7 +82,11 @@ export function searchPalace(
     .filter(Boolean);
 
   let answer = `**${best.title}**\n\n${best.body}`;
-  if (best.excerpt) answer += `\n\nFrom your material: "${best.excerpt}"`;
-  if (related.length) answer += `\n\nRelated: ${related.join(", ")}.`;
+  if (best.excerpt) {
+    answer += `\n\n${t.searchFromMaterial.replace("{excerpt}", best.excerpt)}`;
+  }
+  if (related.length) {
+    answer += `\n\n${t.searchRelated.replace("{related}", related.join(", "))}`;
+  }
   return answer;
 }

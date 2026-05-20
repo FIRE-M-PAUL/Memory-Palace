@@ -11,11 +11,18 @@ import {
   setDifficulty as persistDifficulty,
   setStudyStyle as persistStudyStyle,
 } from "@/lib/progressStorage";
-import { loadTranslations, primeTranslationCache, type TranslationKeys } from "@/lib/i18n";
+import {
+  loadTranslations,
+  primeTranslationCache,
+  invalidateTranslationCache,
+  type TranslationKeys,
+} from "@/lib/i18n";
 import { en } from "@/lib/i18n/en";
+import { clearRoomComputeCache } from "@/lib/roomComputeCache";
 
 interface AppState {
   language: LanguageCode;
+  languageLoading: boolean;
   difficulty?: DifficultyLevel;
   studyStyle?: StudyStyle;
   hydrated: boolean;
@@ -26,8 +33,9 @@ interface AppState {
   hydrate: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   language: "en",
+  languageLoading: false,
   difficulty: undefined,
   studyStyle: undefined,
   hydrated: false,
@@ -48,10 +56,14 @@ export const useAppStore = create<AppState>((set) => ({
     });
   },
   setLanguage: (lang) => {
+    if (lang === get().language && get().hydrated) return;
     persistLanguage(lang);
+    set({ languageLoading: true, language: lang });
+    clearRoomComputeCache();
+    invalidateTranslationCache(lang);
     void loadTranslations(lang).then((t) => {
       primeTranslationCache(lang, t);
-      set({ language: lang, t });
+      set({ language: lang, t, languageLoading: false });
     });
   },
   setDifficulty: (difficulty) => {

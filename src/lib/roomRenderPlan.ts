@@ -1,6 +1,5 @@
 import type { Concept, Relationship } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
-import type { LearningViewMode } from "@/types/learning-views";
 import type { GuidedLayout } from "@/lib/guidedRoomLayout";
 import { getRelatedIdeaIds } from "@/lib/guidedRoomLayout";
 import { getConceptPositionForView } from "@/lib/viewLayouts";
@@ -52,7 +51,6 @@ function filterRelationshipsForVisible(
 /** Single cached render plan — progressive concepts & relationship lines */
 export function buildRoomRenderPlan(
   room: KnowledgeRoom,
-  view: LearningViewMode,
   layout: GuidedLayout,
   selectedId: string | null,
   revealSupporting: boolean,
@@ -86,10 +84,7 @@ export function buildRoomRenderPlan(
 
   const positionCache = new Map<string, { x: number; y: number; z: number }>();
   for (const concept of visibleConcepts) {
-    positionCache.set(
-      concept.id,
-      getConceptPositionForView(concept, view, layout)
-    );
+    positionCache.set(concept.id, getConceptPositionForView(concept, layout));
   }
 
   const primaryRelationships = filterRelationshipsForVisible(

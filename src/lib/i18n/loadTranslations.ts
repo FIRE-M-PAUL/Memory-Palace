@@ -6,12 +6,12 @@ type CatalogPatch = Record<string, unknown>;
 const loaders: Partial<
   Record<LanguageCode, () => Promise<CatalogPatch>>
 > = {
-  fr: () => import("./fr").then((m) => m.fr as CatalogPatch),
-  es: () => import("./es").then((m) => m.es as CatalogPatch),
-  pt: () => import("./pt").then((m) => m.pt as CatalogPatch),
-  sw: () => import("./sw").then((m) => m.sw as CatalogPatch),
-  bem: () => import("./bem").then((m) => m.bem as CatalogPatch),
-  nya: () => import("./nya").then((m) => m.nya as CatalogPatch),
+  fr: () => import("./locales/fr").then((m) => m.fr as CatalogPatch),
+  es: () => import("./locales/es").then((m) => m.es as CatalogPatch),
+  pt: () => import("./locales/pt").then((m) => m.pt as CatalogPatch),
+  sw: () => import("./locales/sw").then((m) => m.sw as CatalogPatch),
+  bem: () => import("./locales/bem").then((m) => m.bem as CatalogPatch),
+  nya: () => import("./locales/nya").then((m) => m.nya as CatalogPatch),
 };
 
 const cache = new Map<LanguageCode, TranslationKeys>();
@@ -64,4 +64,9 @@ export function getTranslationsSync(lang: LanguageCode): TranslationKeys {
 
 export function primeTranslationCache(lang: LanguageCode, dict: TranslationKeys): void {
   cache.set(lang, dict);
+}
+
+export function invalidateTranslationCache(lang?: LanguageCode): void {
+  if (lang) cache.delete(lang);
+  else cache.clear();
 }

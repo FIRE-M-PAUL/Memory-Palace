@@ -21,9 +21,13 @@ export function MathProblemCard({ problem, onNext }: MathProblemCardProps) {
 
   return (
     <div className="glass rounded-2xl p-6 space-y-4 max-w-xl mx-auto border border-amber-500/20">
-      <p className="text-xs text-amber-400 uppercase tracking-wider">Math Practice Engine</p>
+      <p className="text-xs text-amber-400 uppercase tracking-wider">{t.features.math}</p>
       <h3 className="text-xl font-semibold text-slate-100">{problem.question}</h3>
-      <Input value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Enter answer" />
+      <Input
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        placeholder={t.mathEnterAnswer}
+      />
       {result && (
         <p className={result === "correct" ? "text-emerald-400" : "text-red-400"}>
           {result === "correct" ? t.correct : t.incorrect}

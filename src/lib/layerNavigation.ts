@@ -1,6 +1,5 @@
 import type { Concept, Relationship } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
-import type { LearningViewMode } from "@/types/learning-views";
 import type { GuidedLayout } from "@/lib/guidedRoomLayout";
 import { buildGuidedLayout } from "@/lib/guidedRoomLayout";
 import type { PerformanceProfile } from "@/lib/performanceProfile";
@@ -153,7 +152,6 @@ export function goToRootLayer(
 
 function computeLayerPositions(
   concepts: Concept[],
-  view: LearningViewMode,
   layout: GuidedLayout,
   depth: number,
   profile: PerformanceProfile
@@ -166,8 +164,7 @@ function computeLayerPositions(
   concepts.forEach((concept, i) => {
     if (depth === 0) {
       const ring = layout.simplePositions.get(concept.id);
-      const raw =
-        ring ?? getConceptPositionForView(concept, view, layout, profile);
+      const raw = ring ?? getConceptPositionForView(concept, layout);
       positions.set(concept.id, scalePosition(raw, profile.ringScale));
       return;
     }
@@ -208,7 +205,6 @@ function filterLocalRelationships(
 export function buildLayerRenderPlan(
   room: KnowledgeRoom,
   stack: LayerStack,
-  view: LearningViewMode,
   layout: GuidedLayout,
   profile: PerformanceProfile,
   language: LanguageCode
@@ -234,7 +230,6 @@ export function buildLayerRenderPlan(
   const visibleIds = new Set(visibleConcepts.map((c) => c.id));
   const positionCache = computeLayerPositions(
     visibleConcepts,
-    view,
     layout,
     depth,
     profile

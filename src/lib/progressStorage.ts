@@ -161,14 +161,9 @@ export function setDefaultRoomView(view: DefaultRoomView): void {
 }
 
 export function getSelectedLearningView(): LearningViewMode {
-  if (typeof window === "undefined") return DEFAULT_LEARNING_VIEW;
-  const v = localStorage.getItem(KEYS.selectedView);
-  if (v === "focus" || v === "explore" || v === "creative" || v === "room") {
-    return v;
-  }
   return DEFAULT_LEARNING_VIEW;
 }
 
-export function setSelectedLearningView(view: LearningViewMode): void {
-  localStorage.setItem(KEYS.selectedView, view);
+export function setSelectedLearningView(): void {
+  localStorage.setItem(KEYS.selectedView, "focus");
 }

@@ -19,11 +19,16 @@ export interface PerformanceProfile {
   labelMode: "active-only" | "all";
   dpr: [number, number];
   floorSegments: number;
-  /** Wider orbit ring spacing multiplier */
   ringScale: number;
-  /** Invisible touch hit area multiplier */
   nodeHitScale: number;
-  /** Single tap selects only; double tap dives (mobile) */
+  /** Scales concept sphere size */
+  nodeScaleMultiplier: number;
+  /** Central topic 3D scale */
+  coreWireScale: number;
+  coreInnerScale: number;
+  coreLabelDistance: number;
+  /** Lifts the whole learning cluster vertically in the scene */
+  sceneLiftY: number;
   mobileTouchSelectOnly: boolean;
   cameraDefault: [number, number, number];
   cameraFov: number;
@@ -36,9 +41,9 @@ export interface PerformanceProfile {
   showPedestals: boolean;
   showDecorFloor: boolean;
   floorRadius: number;
-  creativeRadius: number;
-  roomRadius: number;
   fogFar: number;
+  /** Y rad/s for optional slow cluster orbit (Focus mode planets) */
+  orbitRingSpeed: number;
 }
 
 let cachedProfile: PerformanceProfile | null = null;
@@ -70,56 +75,59 @@ export function getPerformanceProfile(tier?: ViewportTier): PerformanceProfile {
 
 function buildProfile(tier: ViewportTier, isReducedMotion: boolean): PerformanceProfile {
   const isMobile = tier === "mobile";
-  const isTablet = tier === "tablet";
 
   if (isMobile) {
     return {
       viewport: "mobile",
       isMobile: true,
       isReducedMotion,
-      maxMainIdeas: 5,
-      maxExpandedConcepts: 5,
-      maxRelationshipLines: 4,
+      maxMainIdeas: 4,
+      maxExpandedConcepts: 4,
+      maxRelationshipLines: 3,
       sphereSegments: 8,
-      starCount: 60,
-      sparkleCount: 0,
-      enableSparkles: false,
-      enableOrbitSpin: false,
-      enableNodeFloat: false,
+      starCount: 72,
+      sparkleCount: 28,
+      enableSparkles: !isReducedMotion,
+      enableOrbitSpin: !isReducedMotion,
+      enableNodeFloat: !isReducedMotion,
       enableInfiniteGrid: false,
       labelMode: "active-only",
       dpr: [1, 1],
-      floorSegments: 16,
-      ringScale: 1.28,
-      nodeHitScale: 1.85,
+      floorSegments: 12,
+      ringScale: 1.55,
+      nodeHitScale: 2.2,
+      nodeScaleMultiplier: 1.42,
+      coreWireScale: 0.52,
+      coreInnerScale: 0.3,
+      coreLabelDistance: 16,
+      sceneLiftY: 0.85,
       mobileTouchSelectOnly: true,
-      cameraDefault: [0, 3.2, 9.5],
-      cameraFov: 48,
-      orbitMinDistance: 4,
-      orbitMaxDistance: 14,
-      orbitMaxDistanceFocused: 11,
-      orbitDamping: 0.14,
-      rotateSpeed: 0.45,
+      cameraDefault: [0, 2.4, 8.2],
+      cameraFov: 46,
+      orbitMinDistance: 3.8,
+      orbitMaxDistance: 12,
+      orbitMaxDistanceFocused: 9.5,
+      orbitDamping: 0.16,
+      rotateSpeed: 0.38,
       enablePan: false,
       showPedestals: false,
       showDecorFloor: false,
-      floorRadius: 5.5,
-      creativeRadius: 5.2,
-      roomRadius: 4.8,
+      floorRadius: 4.5,
       fogFar: 22,
+      orbitRingSpeed: !isReducedMotion ? 0.016 : 0,
     };
   }
 
-  if (isTablet) {
+  if (tier === "tablet") {
     return {
       viewport: "tablet",
       isMobile: false,
       isReducedMotion,
-      maxMainIdeas: 7,
-      maxExpandedConcepts: 7,
-      maxRelationshipLines: 6,
+      maxMainIdeas: 6,
+      maxExpandedConcepts: 6,
+      maxRelationshipLines: 5,
       sphereSegments: 12,
-      starCount: 120,
+      starCount: 100,
       sparkleCount: 0,
       enableSparkles: false,
       enableOrbitSpin: false,
@@ -127,24 +135,28 @@ function buildProfile(tier: ViewportTier, isReducedMotion: boolean): Performance
       enableInfiniteGrid: false,
       labelMode: "active-only",
       dpr: [1, 1.25],
-      floorSegments: 24,
-      ringScale: 1.12,
-      nodeHitScale: 1.35,
+      floorSegments: 20,
+      ringScale: 1.18,
+      nodeHitScale: 1.4,
+      nodeScaleMultiplier: 1.12,
+      coreWireScale: 0.68,
+      coreInnerScale: 0.4,
+      coreLabelDistance: 13,
+      sceneLiftY: 0.35,
       mobileTouchSelectOnly: false,
-      cameraDefault: [0, 3.8, 10.5],
+      cameraDefault: [0, 3.5, 10],
       cameraFov: 50,
       orbitMinDistance: 4.5,
-      orbitMaxDistance: 17,
-      orbitMaxDistanceFocused: 13,
+      orbitMaxDistance: 16,
+      orbitMaxDistanceFocused: 12,
       orbitDamping: 0.1,
-      rotateSpeed: 0.65,
+      rotateSpeed: 0.6,
       enablePan: true,
       showPedestals: true,
       showDecorFloor: true,
-      floorRadius: 7.5,
-      creativeRadius: 5.8,
-      roomRadius: 5.2,
-      fogFar: 28,
+      floorRadius: 7,
+      fogFar: 26,
+      orbitRingSpeed: !isReducedMotion ? 0.026 : 0,
     };
   }
 
@@ -167,6 +179,11 @@ function buildProfile(tier: ViewportTier, isReducedMotion: boolean): Performance
     floorSegments: 32,
     ringScale: 1,
     nodeHitScale: 1,
+    nodeScaleMultiplier: 1,
+    coreWireScale: 0.75,
+    coreInnerScale: 0.45,
+    coreLabelDistance: 12,
+    sceneLiftY: 0,
     mobileTouchSelectOnly: false,
     cameraDefault: [0, 4, 11],
     cameraFov: 52,
@@ -179,9 +196,8 @@ function buildProfile(tier: ViewportTier, isReducedMotion: boolean): Performance
     showPedestals: true,
     showDecorFloor: true,
     floorRadius: 9,
-    creativeRadius: 6.2,
-    roomRadius: 5.5,
     fogFar: 30,
+    orbitRingSpeed: !isReducedMotion ? 0.038 : 0,
   };
 }
 

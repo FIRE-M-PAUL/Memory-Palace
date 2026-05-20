@@ -20,9 +20,9 @@ export default function LessonDetailPage() {
   if (!lesson) {
     return (
       <div className="min-h-screen pt-24 text-center text-slate-500">
-        Lesson not found.{" "}
+        {t.lessonNotFound}{" "}
         <Link href="/library" className="text-cyan-400">
-          Back to library
+          {t.backToLibrary}
         </Link>
       </div>
     );

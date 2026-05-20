@@ -1,6 +1,5 @@
 import type { LanguageCode } from "@/types/learning";
 import type { KnowledgeRoom } from "@/types/memory-palace";
-import type { LearningViewMode } from "@/types/learning-views";
 import type { LayerStack } from "@/types/nested-worlds";
 import {
   buildGuidedLayout,
@@ -36,15 +35,14 @@ export function getCachedGuidedLayout(
 export function getCachedLayerRenderPlan(
   room: KnowledgeRoom,
   stack: LayerStack,
-  view: LearningViewMode,
   layout: GuidedLayout,
   profile: PerformanceProfile,
   language: LanguageCode
 ): LayerRenderPlan {
-  const key = `${room.id}:${buildLayerStackKey(stack)}:${view}:${language}:${roomRevision(room)}:${profile.maxMainIdeas}`;
+  const key = `${room.id}:${buildLayerStackKey(stack)}:${language}:${roomRevision(room)}:${profile.maxMainIdeas}`;
   let plan = layerPlanCache.get(key);
   if (!plan) {
-    plan = buildLayerRenderPlan(room, stack, view, layout, profile, language);
+    plan = buildLayerRenderPlan(room, stack, layout, profile, language);
     layerPlanCache.set(key, plan);
   }
   return plan;

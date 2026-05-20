@@ -37,7 +37,7 @@ export function ConnectionExplanationPanel({
           <Link2 className="h-4 w-4" />
           {t.connectionTitle}
         </h3>
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label={t.close}>
           <X className="h-4 w-4" />
         </Button>
       </div>

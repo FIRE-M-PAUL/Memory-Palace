@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -13,39 +13,31 @@ import {
   MessageSquare,
   ArrowLeft,
   Route,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IdeaDetailPanel } from "@/components/IdeaDetailPanel";
 import { StudyPathPanel } from "@/components/StudyPathPanel";
-import { ViewSelector } from "@/components/ViewSelector";
 import { LayerBreadcrumbs } from "@/components/LayerBreadcrumbs";
 import { MobileBottomSheet } from "@/components/mobile/MobileBottomSheet";
+import { MobileRoomHeader } from "@/components/room/MobileRoomHeader";
 import { useLearningLayers } from "@/hooks/useLearningLayers";
 import { useViewport } from "@/hooks/useViewport";
 import { getRoomOrFallback } from "@/lib/roomStorage";
 import {
   getDefaultRoomView,
   setDefaultRoomView,
-  getSelectedLearningView,
-  setSelectedLearningView,
 } from "@/lib/progressStorage";
-import { recommendLearningView } from "@/lib/viewRecommendation";
 import { resolveText } from "@/lib/multilingual";
 import { useAppStore } from "@/store/appStore";
+import { RoomPageLoader } from "@/components/RoomPageLoader";
 import type { KnowledgeRoom } from "@/types/memory-palace";
-import type { LearningViewMode } from "@/types/learning-views";
 
 const KnowledgeRoom3D = dynamic(
   () => import("@/components/3d/KnowledgeRoom3D").then((m) => m.KnowledgeRoom3D),
   {
     ssr: false,
-    loading: () => (
-      <div className="h-[55vh] rounded-2xl glass flex items-center justify-center">
-        <p className="text-cyan-400 animate-pulse">Loading your memory room...</p>
-      </div>
-    ),
+    loading: () => <RoomPageLoader />,
   }
 );
 
@@ -69,7 +61,7 @@ const ConnectionExplanationPanel = dynamic(
 
 export default function RoomPage() {
   const params = useParams();
-  const { language, t, studyStyle } = useAppStore();
+  const { language, t } = useAppStore();
   const id = params.id as string;
 
   const [room, setRoom] = useState<KnowledgeRoom | null>(null);
@@ -79,16 +71,14 @@ export default function RoomPage() {
     b: string;
   } | null>(null);
   const [renderMode, setRenderMode] = useState<"3d" | "2d">("3d");
-  const [learningView, setLearningView] = useState<LearningViewMode>("focus");
   const [routeStep, setRouteStep] = useState(0);
   const [showStudyPath, setShowStudyPath] = useState(false);
   const [showPathPanel, setShowPathPanel] = useState(false);
-  const [dismissedRecommendation, setDismissedRecommendation] = useState(false);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
   useEffect(() => {
     setRoom(getRoomOrFallback(id));
     setRenderMode(getDefaultRoomView());
-    setLearningView(getSelectedLearningView());
   }, [id]);
 
   const {
@@ -106,11 +96,6 @@ export default function RoomPage() {
   } = useLearningLayers(room, language);
 
   const { isMobile } = useViewport();
-
-  const recommendation = useMemo(
-    () => (room ? recommendLearningView(room, studyStyle) : null),
-    [room, studyStyle]
-  );
 
   const selectedConcept =
     selectedId && room ? room.concepts.find((c) => c.id === selectedId) ?? null : null;
@@ -142,26 +127,35 @@ export default function RoomPage() {
     setDefaultRoomView(mode);
   };
 
-  const changeLearningView = (view: LearningViewMode) => {
-    setLearningView(view);
-    setSelectedLearningView(view);
-  };
-
   if (!room) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center text-slate-500">
-        Loading...
+        {t.loading}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-16 flex flex-col bg-[#030712]">
-      <div className="border-b border-slate-800 glass-strong px-4 py-3">
+    <div className="room-page min-h-[100dvh] pt-14 md:pt-16 flex flex-col bg-[#030712] overflow-x-hidden">
+      {isMobile && (
+        <MobileRoomHeader
+          roomTitle={resolveText(room.title, language)}
+          roomId={id}
+          renderMode={renderMode}
+          onRenderModeChange={setRender}
+          showStudyPath={showStudyPath}
+          onToggleStudyPath={() => {
+            setShowStudyPath((v) => !v);
+            setShowPathPanel((v) => !v);
+          }}
+        />
+      )}
+
+      <div className="hidden md:block border-b border-slate-800 glass-strong px-4 py-3">
         <div className="mx-auto max-w-[1600px] flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Button variant="ghost" size="icon" asChild className="shrink-0">
-              <Link href="/dashboard" aria-label="Back to dashboard">
+              <Link href="/dashboard" aria-label={t.backToDashboard}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
@@ -175,17 +169,6 @@ export default function RoomPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <ViewSelector
-              value={learningView}
-              onChange={changeLearningView}
-              className="hidden sm:flex"
-            />
-            <ViewSelector
-              value={learningView}
-              onChange={changeLearningView}
-              compact
-              className="sm:hidden"
-            />
             <Button
               size="sm"
               variant={renderMode === "3d" ? "default" : "outline"}
@@ -236,37 +219,9 @@ export default function RoomPage() {
             </Button>
           </div>
         </div>
-
-        {recommendation && !dismissedRecommendation && (
-          <div className="mx-auto max-w-[1600px] mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-sm">
-            <span className="text-cyan-100">
-              {t.recommendedView}:{" "}
-              <strong>{t.learningViews[recommendation.view]}</strong>
-              <span className="text-slate-400 ml-2 hidden md:inline">
-                — {t[recommendation.reasonKey]}
-              </span>
-            </span>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => changeLearningView(recommendation.view)}
-            >
-              {t.learningViews[recommendation.view]}
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="ml-auto h-8 w-8"
-              onClick={() => setDismissedRecommendation(true)}
-              aria-label="Dismiss"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </div>
 
-      <div className="mx-auto max-w-[1600px] w-full px-4 pb-2">
+      <div className="mx-auto max-w-[1600px] w-full px-2 md:px-4 pb-1 md:pb-2">
         <LayerBreadcrumbs
           stack={layerStack}
           canGoBack={canGoBack}
@@ -277,12 +232,11 @@ export default function RoomPage() {
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-        <div className="flex-1 p-2 sm:p-4 min-h-[min(58vh,520px)] flex flex-col gap-2 sm:gap-4">
+        <div className="flex-1 p-1 sm:p-4 min-h-0 flex flex-col gap-1 sm:gap-4">
           {layerStack.length > 0 && renderMode === "3d" ? (
             <KnowledgeRoom3D
               room={room}
               selectedId={selectedId}
-              learningView={learningView}
               layerStack={layerStack}
               layerKey={layerKey}
               transitioning={layerTransitioning}
@@ -304,7 +258,6 @@ export default function RoomPage() {
             <KnowledgeGraph2D
               room={room}
               selectedId={selectedId}
-              learningView={learningView}
               layerStack={layerStack}
               transitioning={layerTransitioning}
               onConceptActivate={handleConceptSelect}
@@ -323,7 +276,7 @@ export default function RoomPage() {
           ) : null}
         </div>
 
-        {showPathPanel && (
+        {showPathPanel && !isMobile && (
           <StudyPathPanel
             className="w-full lg:w-72 shrink-0 m-4 mt-0 lg:mt-4 lg:mr-0"
             room={room}
@@ -404,7 +357,28 @@ export default function RoomPage() {
         </MobileBottomSheet>
       )}
 
-      <div className="border-t border-slate-800 p-4">
+      <div className="border-t border-slate-800/80 shrink-0">
+        {isMobile ? (
+          <div className="mx-auto max-w-[1600px] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={() => setMobileChatOpen((v) => !v)}
+              className="flex w-full min-h-[48px] items-center justify-between rounded-xl border border-cyan-500/20 bg-slate-950/80 px-4 py-3 text-sm font-medium text-cyan-100 touch-manipulation"
+            >
+              <span className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                {t.askPalace}
+              </span>
+              <span className="text-xs text-slate-500">{mobileChatOpen ? "−" : "+"}</span>
+            </button>
+            {mobileChatOpen && (
+              <div className="mt-2 max-h-[38dvh] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/90 p-2">
+                <AskPalaceChat roomId={room.id} room={room} />
+              </div>
+            )}
+          </div>
+        ) : (
+        <div className="p-4">
         <Tabs defaultValue="ask" className="mx-auto max-w-[1600px]">
           <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="ask" className="min-h-[40px]">
@@ -434,6 +408,8 @@ export default function RoomPage() {
             />
           </TabsContent>
         </Tabs>
+        </div>
+        )}
       </div>
     </div>
   );
