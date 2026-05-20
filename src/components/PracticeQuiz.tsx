@@ -32,7 +32,7 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
-  const [hintIdx, setHintIdx] = useState(0);
+  const [hintsRevealed, setHintsRevealed] = useState(0);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
   const [mathMode, setMathMode] = useState(false);
@@ -108,23 +108,30 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
     }
   };
 
+  const activeHintIndex = hintsRevealed > 0 ? hintsRevealed - 1 : -1;
+  const activeHintText =
+    activeHintIndex >= 0 && q.hints[activeHintIndex]
+      ? resolveText(q.hints[activeHintIndex], language)
+      : null;
+  const canRevealMoreHint = hintsRevealed < q.hints.length;
+
   return (
-    <div className="glass rounded-2xl p-6 space-y-4 max-w-xl mx-auto">
+    <div className="glass rounded-2xl p-4 sm:p-6 space-y-4 max-w-xl mx-auto w-full min-w-0 overflow-hidden">
       <h2 className="text-lg font-semibold text-cyan-200">{t.practiceTime}</h2>
-      <p className="text-sm text-slate-500">
+      <p className="text-xs sm:text-sm text-slate-500 break-words">
         Question {index + 1} / {questions.length} · {t.score}: {score}
       </p>
-      <h3 className="text-lg font-medium text-slate-100">
+      <h3 className="text-base sm:text-lg font-medium text-slate-100 leading-snug break-words whitespace-normal">
         {resolveText(q.question, language)}
       </h3>
       {q.options && (
-        <div className="space-y-2">
+        <div className="space-y-2 min-w-0">
           {q.options.map((opt, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setAnswer(resolveText(opt, language))}
-              className="w-full text-left glass rounded-xl p-3 hover:border-cyan-500/30 text-sm"
+              className="w-full max-w-full min-w-0 text-left glass rounded-xl p-3 hover:border-cyan-500/30 text-xs sm:text-sm break-words whitespace-normal"
             >
               {resolveText(opt, language)}
             </button>
@@ -136,25 +143,54 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
         onChange={(e) => setAnswer(e.target.value)}
         placeholder={t.practiceAnswerPlaceholder}
         disabled={feedback === "correct"}
+        className="max-w-full"
       />
       {feedback && (
-        <p className={feedback === "correct" ? "text-emerald-400" : "text-red-400"}>
+        <p
+          className={`text-sm sm:text-base break-words ${
+            feedback === "correct" ? "text-emerald-400" : "text-red-400"
+          }`}
+        >
           {feedback === "correct" ? t.correct : t.incorrect}
         </p>
       )}
       {feedback && (
-        <p className="text-sm text-slate-400">{resolveText(q.explanation, language)}</p>
+        <p className="text-xs sm:text-sm text-slate-400 leading-relaxed break-words whitespace-normal max-w-full">
+          {resolveText(q.explanation, language)}
+        </p>
+      )}
+      {!feedback && activeHintText && (
+        <div
+          className="w-full max-w-full min-w-0 overflow-hidden rounded-xl border border-cyan-500/25 bg-cyan-500/5 px-3 py-2.5 sm:px-4 sm:py-3"
+          role="region"
+          aria-label={t.hint}
+        >
+          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-cyan-300/90 mb-1.5">
+            {t.hint}
+            {q.hints.length > 1 && (
+              <span className="text-cyan-400/60 font-normal normal-case ml-1">
+                ({hintsRevealed}/{q.hints.length})
+              </span>
+            )}
+          </p>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed break-words whitespace-normal">
+            {activeHintText}
+          </p>
+        </div>
       )}
       <div className="flex flex-wrap gap-2">
         {!feedback && (
           <>
             <Button onClick={check}>{t.submit}</Button>
-            <Button
-              variant="outline"
-              onClick={() => setHintIdx((h) => h + 1)}
-            >
-              {t.hint}: {resolveText(q.hints[Math.min(hintIdx, q.hints.length - 1)], language)}
-            </Button>
+            {q.hints.length > 0 && (
+              <Button
+                variant="outline"
+                disabled={!canRevealMoreHint}
+                onClick={() => setHintsRevealed((h) => Math.min(h + 1, q.hints.length))}
+              >
+                {hintsRevealed === 0 ? t.hint : canRevealMoreHint ? t.nextHint : t.hint}
+              </Button>
+            )}
           </>
         )}
         {feedback && (
@@ -165,7 +201,7 @@ export function PracticeQuiz({ room, roomId }: PracticeQuizProps) {
                 setIndex((i) => i + 1);
                 setAnswer("");
                 setFeedback(null);
-                setHintIdx(0);
+                setHintsRevealed(0);
               }
             }}
           >

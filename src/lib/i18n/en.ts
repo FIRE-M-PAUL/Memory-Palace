@@ -102,6 +102,7 @@ export const en = {
   almostThere: "Almost there",
   goodJob: "Good job",
   hint: "Show Hint",
+  nextHint: "Next hint",
   explanation: "Explanation",
   next: "Next",
   previous: "Previous",

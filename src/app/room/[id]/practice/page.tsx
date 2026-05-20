@@ -15,8 +15,8 @@ export default function RoomPracticePage() {
   const { language, t } = useAppStore();
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4 grid-bg">
-      <div className="mx-auto max-w-3xl space-y-6">
+    <div className="min-h-screen pt-24 pb-16 px-4 grid-bg overflow-x-hidden">
+      <div className="mx-auto max-w-3xl w-full min-w-0 space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href={`/room/${room.id}`}>
