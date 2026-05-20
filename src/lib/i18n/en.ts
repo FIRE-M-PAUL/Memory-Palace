@@ -92,10 +92,11 @@ export const en = {
   memoryRoute: "Study Path",
   presentation: "Guided Lesson",
   askPalace: "Ask Your Notes",
-  askWarning: "Ask a question about your uploaded notes. Answers come from your study content only.",
+  askWarning:
+    "Ask about your uploaded document. Answers use the exact ideas, importance, and explanations from your notes — not outside knowledge.",
   askPlaceholder: "Ask about your lesson...",
   askNotFound:
-    "I could not find that in your notes. Try asking about one of the ideas in your study map.",
+    "I can only answer questions about your uploaded document. Please ask something based on your notes or one of the ideas in your memory palace.",
   correct: "Correct. You understood this idea well.",
   incorrect: "Not quite. Here is a hint to help you.",
   almostThere: "Almost there",
@@ -172,6 +173,8 @@ export const en = {
   currentLearningLayer: "You are in a focused learning layer",
   diveDeeperHint: "Double-tap a planet to enter its nested learning world.",
   studyPathPanelHelp: "Follow these steps in order. Tap a step to highlight it on your map.",
+  studyPathPageHelp:
+    "Follow these steps in order to study your uploaded material. Work through each idea at your own pace.",
   switchTo2dShort: "2D View",
   coreTopic: "Main topic",
   connectsToMain: "How it connects to the main topic",
@@ -184,6 +187,7 @@ export const en = {
   dismiss: "Dismiss",
   close: "Close",
   backToDashboard: "Back to dashboard",
+  backToRoom: "Back to memory room",
   backToLibrary: "Back to library",
   lessonNotFound: "Lesson not found.",
   footerTagline: "Visual learning for every level of understanding",
@@ -214,10 +218,23 @@ export const en = {
   searchAskAbout:
     'Ask about something in "{title}". Try one of the ideas on your study map.',
   searchNotFound:
-    "I could not find that in your notes. Try asking about one of these ideas: {suggestions}.",
-  searchNotFoundShort: "I could not find that in your notes. Try asking about one of the ideas in your study map.",
+    "That isn't in your uploaded document. Please ask a question based on your notes. Try one of these ideas: {suggestions}.",
+  searchNotFoundShort:
+    "That isn't in your uploaded document. Please ask a question based on your notes or study map.",
   searchFromMaterial: 'From your material: "{excerpt}"',
   searchRelated: "Related: {related}.",
+  answerImportance: "The importance of {topic} is {answer}",
+  answerWhatIs: "{topic} is {answer}",
+  answerWhy: "{topic} matters because {answer}",
+  answerHow: "According to your notes, here is how {topic} works: {answer}",
+  answerGeneral: "According to your notes, {topic}: {answer}",
+  answerFromDocument: "From your uploaded document: {answer}",
+  answerAlsoInMaterial: 'Your notes also say: "{excerpt}"',
+  aiIndexingNotes: "Building semantic memory from your document…",
+  aiThinking: "Searching your notes…",
+  feedbackHelpful: "Helpful answer",
+  feedbackNotHelpful: "Not helpful",
+  matchConfidence: "match",
   connectionTypes: {
     partOf: "part of",
     relatesTo: "relates to",

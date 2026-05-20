@@ -22,8 +22,6 @@ interface MobileRoomHeaderProps {
   roomId: string;
   renderMode: "3d" | "2d";
   onRenderModeChange: (mode: "3d" | "2d") => void;
-  showStudyPath: boolean;
-  onToggleStudyPath: () => void;
 }
 
 export function MobileRoomHeader({
@@ -31,8 +29,6 @@ export function MobileRoomHeader({
   roomId,
   renderMode,
   onRenderModeChange,
-  showStudyPath,
-  onToggleStudyPath,
 }: MobileRoomHeaderProps) {
   const t = useAppStore((s) => s.t);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -94,17 +90,11 @@ export function MobileRoomHeader({
 
       {menuOpen && (
         <div className="grid grid-cols-2 gap-2 px-3 pb-3 border-t border-slate-800/60 pt-2">
-          <Button
-            size="sm"
-            variant={showStudyPath ? "default" : "outline"}
-            className="min-h-[44px] justify-start gap-2"
-            onClick={() => {
-              onToggleStudyPath();
-              setMenuOpen(false);
-            }}
-          >
-            <Route className="h-4 w-4 shrink-0" />
-            {t.showStudyPath}
+          <Button size="sm" variant="outline" className="min-h-[44px] justify-start gap-2" asChild>
+            <Link href={`/room/${roomId}/path`} onClick={() => setMenuOpen(false)}>
+              <Route className="h-4 w-4 shrink-0" />
+              {t.showStudyPath}
+            </Link>
           </Button>
           <Button size="sm" variant="outline" className="min-h-[44px] justify-start gap-2" asChild>
             <Link href={`/room/${roomId}/study`} onClick={() => setMenuOpen(false)}>

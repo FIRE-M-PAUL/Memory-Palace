@@ -15,13 +15,12 @@ import {
   Route,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IdeaDetailPanel } from "@/components/IdeaDetailPanel";
-import { StudyPathPanel } from "@/components/StudyPathPanel";
 import { LayerBreadcrumbs } from "@/components/LayerBreadcrumbs";
 import { MobileBottomSheet } from "@/components/mobile/MobileBottomSheet";
 import { MobileRoomHeader } from "@/components/room/MobileRoomHeader";
 import { useLearningLayers } from "@/hooks/useLearningLayers";
+import { recordStudyInteraction } from "@/lib/ai/learningProfile";
 import { useViewport } from "@/hooks/useViewport";
 import { getRoomOrFallback } from "@/lib/roomStorage";
 import {
@@ -71,9 +70,6 @@ export default function RoomPage() {
     b: string;
   } | null>(null);
   const [renderMode, setRenderMode] = useState<"3d" | "2d">("3d");
-  const [routeStep, setRouteStep] = useState(0);
-  const [showStudyPath, setShowStudyPath] = useState(false);
-  const [showPathPanel, setShowPathPanel] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
   useEffect(() => {
@@ -99,21 +95,22 @@ export default function RoomPage() {
 
   const selectedConcept =
     selectedId && room ? room.concepts.find((c) => c.id === selectedId) ?? null : null;
-  const routeConceptIds = room?.memoryRoute.map((s) => s.conceptId) ?? [];
   const coreTitle = currentFrame?.title ?? "";
 
   const handleConceptSelect = useCallback((conceptId: string) => {
     setSelectedId(conceptId);
     setConnectionPair(null);
-  }, []);
+    recordStudyInteraction(id, conceptId, "select");
+  }, [id]);
 
   const handleConceptDive = useCallback(
     (conceptId: string) => {
       setSelectedId(conceptId);
       setConnectionPair(null);
+      recordStudyInteraction(id, conceptId, "dive");
       diveInto(conceptId);
     },
-    [diveInto]
+    [diveInto, id]
   );
 
   const handleResetLayers = useCallback(() => {
@@ -143,11 +140,6 @@ export default function RoomPage() {
           roomId={id}
           renderMode={renderMode}
           onRenderModeChange={setRender}
-          showStudyPath={showStudyPath}
-          onToggleStudyPath={() => {
-            setShowStudyPath((v) => !v);
-            setShowPathPanel((v) => !v);
-          }}
         />
       )}
 
@@ -187,17 +179,11 @@ export default function RoomPage() {
               <Map className="h-4 w-4" />
               <span className="hidden sm:inline">{t.switchTo2dShort}</span>
             </Button>
-            <Button
-              size="sm"
-              variant={showStudyPath ? "default" : "outline"}
-              onClick={() => {
-                setShowStudyPath((v) => !v);
-                setShowPathPanel((v) => !v);
-              }}
-              className="min-h-[40px]"
-            >
-              <Route className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.showStudyPath}</span>
+            <Button size="sm" variant="outline" asChild className="min-h-[40px]">
+              <Link href={`/room/${id}/path`}>
+                <Route className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.showStudyPath}</span>
+              </Link>
             </Button>
             <Button size="sm" variant="outline" asChild className="min-h-[40px]">
               <Link href={`/room/${id}/study`}>
@@ -251,8 +237,6 @@ export default function RoomPage() {
                 setConnectionPair({ a, b });
                 setSelectedId(null);
               }}
-              showStudyPath={showStudyPath}
-              routeConceptIds={routeConceptIds}
             />
           ) : layerStack.length > 0 ? (
             <KnowledgeGraph2D
@@ -270,27 +254,9 @@ export default function RoomPage() {
                 setConnectionPair({ a, b });
                 setSelectedId(null);
               }}
-              showStudyPath={showStudyPath}
-              routeConceptIds={routeConceptIds}
             />
           ) : null}
         </div>
-
-        {showPathPanel && !isMobile && (
-          <StudyPathPanel
-            className="w-full lg:w-72 shrink-0 m-4 mt-0 lg:mt-4 lg:mr-0"
-            room={room}
-            currentStep={routeStep}
-            onStepClick={(step) => {
-              setRouteStep(step);
-              const s = room.memoryRoute[step];
-              if (s) {
-                setSelectedId(s.conceptId);
-                setShowStudyPath(true);
-              }
-            }}
-          />
-        )}
 
         {connectionPair && (
           <div className="hidden lg:block">
@@ -379,35 +345,9 @@ export default function RoomPage() {
           </div>
         ) : (
         <div className="p-4">
-        <Tabs defaultValue="ask" className="mx-auto max-w-[1600px]">
-          <TabsList className="flex-wrap h-auto gap-1">
-            <TabsTrigger value="ask" className="min-h-[40px]">
-              <MessageSquare className="h-4 w-4 mr-1" />
-              {t.askPalace}
-            </TabsTrigger>
-            <TabsTrigger value="route" className="min-h-[40px]">
-              {t.studyPath}
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="ask" className="mt-4">
+          <div className="mx-auto max-w-[1600px]">
             <AskPalaceChat roomId={room.id} room={room} />
-          </TabsContent>
-          <TabsContent value="route" className="mt-4">
-            <StudyPathPanel
-              room={room}
-              currentStep={routeStep}
-              onStepClick={(step) => {
-                setRouteStep(step);
-                const s = room.memoryRoute[step];
-                if (s) {
-                  setSelectedId(s.conceptId);
-                  setShowStudyPath(true);
-                  setShowPathPanel(true);
-                }
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+          </div>
         </div>
         )}
       </div>

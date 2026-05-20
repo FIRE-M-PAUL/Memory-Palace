@@ -349,21 +349,21 @@ const SceneContent = memo(function SceneContent({
 
       {profile.starCount > 0 && (
         <Stars
-          radius={profile.isMobile ? 45 : 60}
-          depth={profile.isMobile ? 28 : 40}
+          radius={profile.isMobile ? 54 : 60}
+          depth={profile.isMobile ? 34 : 40}
           count={profile.starCount}
-          factor={profile.isMobile ? 2.4 : 3}
+          factor={profile.isMobile ? 1.9 : 3}
           fade
-          speed={profile.isMobile ? 0.35 : 0.5}
+          speed={profile.isMobile ? 0.2 : 0.5}
         />
       )}
       {profile.enableSparkles && profile.sparkleCount > 0 && (
         <Sparkles
           count={profile.sparkleCount}
-          scale={profile.isMobile ? 16 : 12}
-          size={profile.isMobile ? 1.2 : 1.5}
-          speed={profile.isMobile ? 0.12 : 0.2}
-          opacity={profile.isMobile ? 0.35 : 0.25}
+          scale={profile.isMobile ? 14 : 12}
+          size={profile.isMobile ? 0.85 : 1.5}
+          speed={profile.isMobile ? 0.08 : 0.2}
+          opacity={profile.isMobile ? 0.22 : 0.25}
           color="#67e8f9"
         />
       )}
@@ -514,7 +514,7 @@ export function KnowledgeCanvas({
       className={cn(
         "w-full flex flex-col overflow-hidden",
         isMobile
-          ? "h-[min(70dvh,580px)] min-h-[312px] rounded-xl border border-cyan-400/20 bg-gradient-to-b from-[#071018] via-slate-950/95 to-[#030712] shadow-[0_0_40px_-8px_rgba(34,211,238,0.12)]"
+          ? "h-[min(66dvh,520px)] min-h-[296px] rounded-xl border border-cyan-400/15 bg-gradient-to-b from-[#071018] via-slate-950/95 to-[#030712] shadow-[0_0_28px_-10px_rgba(34,211,238,0.1)]"
           : "h-full min-h-[420px] rounded-2xl border border-cyan-500/10"
       )}
     >
@@ -531,7 +531,7 @@ export function KnowledgeCanvas({
       <div
           className={cn(
             "flex-1 relative min-h-0 transition-opacity duration-500 ease-out",
-            isMobile ? "min-h-[280px]" : "min-h-[380px]",
+            isMobile ? "min-h-[260px]" : "min-h-[380px]",
             transitioning ? "opacity-[0.32]" : "opacity-100"
           )}
       >
@@ -565,15 +565,15 @@ export function KnowledgeCanvas({
         {isMobile && onSwitch2d && (
           <>
             <div
-              className="pointer-events-none absolute inset-0 z-[1] rounded-[inherit] opacity-90"
+              className="pointer-events-none absolute inset-0 z-[1] rounded-[inherit] opacity-70"
               aria-hidden
               style={{
                 background:
-                  "radial-gradient(ellipse 95% 78% at 50% 42%, transparent 0%, rgba(2,6,23,0.2) 52%, rgba(2,6,23,0.88) 100%)",
+                  "radial-gradient(ellipse 95% 78% at 50% 42%, transparent 0%, rgba(2,6,23,0.14) 52%, rgba(2,6,23,0.72) 100%)",
               }}
             />
             <div className="absolute top-3 left-3 right-3 z-10 pointer-events-none flex justify-center">
-              <p className="text-[10px] leading-snug tracking-wide text-cyan-100/65 bg-slate-950/45 backdrop-blur-md rounded-full px-3.5 py-1.5 border border-cyan-400/12 max-w-[min(96%,20rem)] text-center shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+              <p className="text-[9px] leading-snug tracking-wide text-cyan-100/58 bg-slate-950/35 backdrop-blur-md rounded-full px-3 py-1 border border-cyan-400/10 max-w-[min(94%,18rem)] text-center shadow-[0_4px_16px_rgba(0,0,0,0.28)]">
                 {t.mobileSceneHint}
               </p>
             </div>

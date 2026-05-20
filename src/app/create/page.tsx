@@ -8,6 +8,7 @@ import { TextInputPanel } from "@/components/TextInputPanel";
 import { UploadBox } from "@/components/UploadBox";
 import { ProcessingLoader } from "@/components/ProcessingLoader";
 import { createRoom, saveDemoRoom, DEMO_ROOM_ID } from "@/lib/roomStorage";
+import { indexRoomOnClient } from "@/lib/ai/client";
 import { processUploadedDocument } from "@/lib/documentProcessor";
 import { DocumentProcessingError } from "@/types/document-processing";
 import type { DocumentProcessingSummary } from "@/types/document-processing";
@@ -69,6 +70,7 @@ function CreatePageContent() {
       setProcessingSummary(result.summary);
       await new Promise((r) => setTimeout(r, 1800));
       const room = createRoom(result.room);
+      void indexRoomOnClient(room, language);
       router.push(`/room/${room.id}`);
     } catch (e) {
       if (e instanceof DocumentProcessingError) {

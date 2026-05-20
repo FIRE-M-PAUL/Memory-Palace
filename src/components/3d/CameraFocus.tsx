@@ -56,9 +56,9 @@ export function CameraFocus({
 
     if (focusing && focusPosition) {
       desiredTarget.current.copy(focusPosition);
-      const offset = profile.isMobile ? 1.55 : 1.2;
-      const lift = profile.isMobile ? 1.65 : 2.2;
-      const back = profile.isMobile ? 3.85 : 5.5;
+      const offset = profile.isMobile ? 1.2 : 1.2;
+      const lift = profile.isMobile ? 1.35 : 2.2;
+      const back = profile.isMobile ? 4.65 : 5.5;
       desiredCamera.current.set(
         focusPosition.x + offset,
         focusPosition.y + lift,
@@ -106,7 +106,7 @@ export function CameraFocus({
       );
 
       if (persp && !profile.isReducedMotion) {
-        const narrow = profile.isMobile ? 42.5 : profile.cameraFov - 1;
+        const narrow = profile.isMobile ? 47 : profile.cameraFov - 1;
         persp.fov = THREE.MathUtils.damp(persp.fov, narrow, 6, delta);
         persp.updateProjectionMatrix();
       }
@@ -119,9 +119,9 @@ export function CameraFocus({
         );
         const bob = Math.sin(idlePhase.current * 2.15) * 0.22;
         desiredCamera.current.set(
-          Math.sin(idlePhase.current) * R * 0.92,
-          profile.cameraDefault[1] + bob,
-          Math.cos(idlePhase.current) * R * 0.95
+          Math.sin(idlePhase.current) * R * 0.84,
+          profile.cameraDefault[1] + bob * 0.72,
+          Math.cos(idlePhase.current) * R * 0.88
         );
         desiredTarget.current.copy(baseTarget);
       } else {

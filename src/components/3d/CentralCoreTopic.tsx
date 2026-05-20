@@ -11,7 +11,7 @@ interface CentralCoreTopicProps {
 }
 
 function CentralCoreTopicInner({ title, pulse = true, profile }: CentralCoreTopicProps) {
-  const maxLen = profile.isMobile ? 28 : 42;
+  const maxLen = profile.isMobile ? 24 : 42;
   const label = title.length > maxLen ? `${title.slice(0, maxLen - 1)}…` : title;
   const segments = profile.sphereSegments;
 
@@ -22,7 +22,7 @@ function CentralCoreTopicInner({ title, pulse = true, profile }: CentralCoreTopi
         <meshStandardMaterial
           color="#a78bfa"
           emissive="#a78bfa"
-          emissiveIntensity={pulse ? (profile.isMobile ? 1.1 : 1.5) : 1}
+          emissiveIntensity={pulse ? (profile.isMobile ? 0.92 : 1.5) : 1}
           metalness={0.85}
           roughness={0.15}
           wireframe
@@ -33,9 +33,9 @@ function CentralCoreTopicInner({ title, pulse = true, profile }: CentralCoreTopi
         <meshStandardMaterial
           color="#22d3ee"
           emissive="#22d3ee"
-          emissiveIntensity={profile.isMobile ? 1.4 : 1.8}
+          emissiveIntensity={profile.isMobile ? 1.18 : 1.8}
           transparent
-          opacity={0.85}
+          opacity={profile.isMobile ? 0.78 : 0.85}
         />
       </mesh>
       <Html
@@ -47,7 +47,7 @@ function CentralCoreTopicInner({ title, pulse = true, profile }: CentralCoreTopi
         <div
           className={`text-center font-semibold bg-violet-500/20 border border-violet-400/40 text-violet-100 backdrop-blur-md rounded-lg ${
             profile.isMobile
-              ? "px-2 py-1 text-[10px] leading-tight max-w-[88px]"
+              ? "px-1.5 py-0.5 text-[9px] leading-tight max-w-[72px]"
               : "px-3 py-1.5 text-xs sm:text-sm font-bold max-w-[200px]"
           }`}
         >
@@ -63,9 +63,9 @@ function CentralCoreTopicInner({ title, pulse = true, profile }: CentralCoreTopi
 
   return (
     <Float
-      speed={profile.isMobile ? 1.05 : 0.8}
-      rotationIntensity={profile.isMobile ? 0.12 : 0.08}
-      floatIntensity={profile.isMobile ? 0.32 : 0.25}
+      speed={profile.isMobile ? 0.9 : 0.8}
+      rotationIntensity={profile.isMobile ? 0.08 : 0.08}
+      floatIntensity={profile.isMobile ? 0.2 : 0.25}
     >
       {core}
     </Float>

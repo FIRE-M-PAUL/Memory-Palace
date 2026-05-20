@@ -65,7 +65,7 @@ function ConceptNodeInner({
     let floatAmp = 0;
     if (profile.enableNodeFloat && !profile.isReducedMotion) {
       if (profile.isMobile) {
-        floatAmp = dimmed ? 0.014 : active || selected ? 0.048 : 0.026;
+        floatAmp = dimmed ? 0.01 : active || selected ? 0.03 : 0.018;
       } else {
         floatAmp = (active || selected) && !dimmed ? 0.035 : 0;
       }
@@ -84,14 +84,14 @@ function ConceptNodeInner({
 
     const targetScale =
       scale *
-      (active ? 1.2 : 1) *
-      (1 + pulseBoost + (selected ? 0.06 : 0) + (dimmed ? 0 : breath * 0.04));
+      (active ? (profile.isMobile ? 1.1 : 1.2) : 1) *
+      (1 + pulseBoost + (selected ? (profile.isMobile ? 0.035 : 0.06) : 0) + (dimmed ? 0 : breath * 0.04));
 
     mesh.scale.setScalar(targetScale);
 
     if (glow && mobileAlive) {
-      const glowPulse = 1 + Math.sin(tClock * 0.9 + phase) * 0.08 + touchPulse.current * 0.2;
-      glow.scale.setScalar(targetScale * 1.42 * glowPulse);
+      const glowPulse = 1 + Math.sin(tClock * 0.9 + phase) * 0.06 + touchPulse.current * 0.14;
+      glow.scale.setScalar(targetScale * 1.3 * glowPulse);
     }
   });
 
@@ -121,9 +121,9 @@ function ConceptNodeInner({
     lastTapRef.current = now;
   };
 
-  const opacity = dimmed ? 0.14 : active ? 0.95 : 0.78;
-  const emissiveBase = dimmed ? 0.12 : active ? 1.15 : 0.55;
-  const emissive = emissiveBase + (mobileAlive && !dimmed ? 0.15 : 0);
+  const opacity = dimmed ? 0.12 : active ? 0.9 : 0.72;
+  const emissiveBase = dimmed ? 0.1 : active ? 1 : 0.46;
+  const emissive = emissiveBase + (mobileAlive && !dimmed ? 0.08 : 0);
 
   return (
     <group position={[position.x, position.y, position.z]}>
@@ -149,12 +149,12 @@ function ConceptNodeInner({
       </mesh>
 
       {mobileAlive && !dimmed && (
-        <mesh ref={glowRef} scale={scale * 1.38} frustumCulled>
+        <mesh ref={glowRef} scale={scale * 1.24} frustumCulled>
           <sphereGeometry args={[1, Math.max(segments, 10), Math.max(segments, 10)]} />
           <meshBasicMaterial
             color={color}
             transparent
-            opacity={0.11}
+            opacity={0.08}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />
@@ -175,12 +175,12 @@ function ConceptNodeInner({
       </mesh>
 
       {active && !dimmed && (
-        <mesh scale={scale * 1.72} frustumCulled renderOrder={-1}>
+        <mesh scale={scale * (profile.isMobile ? 1.5 : 1.72)} frustumCulled renderOrder={-1}>
           <sphereGeometry args={[1, Math.min(segments + 4, 16), Math.min(segments + 4, 16)]} />
           <meshBasicMaterial
             color={color}
             transparent
-            opacity={profile.isMobile ? 0.18 : 0.12}
+            opacity={profile.isMobile ? 0.12 : 0.12}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />
@@ -189,15 +189,15 @@ function ConceptNodeInner({
 
       {showLabel && !dimmed && (
         <Html
-          position={[0, scale + (profile.isMobile ? 0.55 : 0.4), 0]}
+          position={[0, scale + (profile.isMobile ? 0.42 : 0.4), 0]}
           center
-          distanceFactor={profile.isMobile ? 10 : 14}
+          distanceFactor={profile.isMobile ? 12 : 14}
           style={{ pointerEvents: "none", userSelect: "none" }}
         >
           <div
             className={`rounded-xl font-medium backdrop-blur-md border max-w-[min(92vw,200px)] text-center leading-snug ${
               profile.isMobile
-                ? "px-3 py-2 text-sm"
+                ? "px-2 py-1 text-[11px] max-w-[min(72vw,148px)]"
                 : "px-2 py-1 text-xs whitespace-nowrap"
             } ${
               selected
@@ -209,7 +209,7 @@ function ConceptNodeInner({
           >
             {resolveText(concept.title, language)}
             {profile.isMobile && selected && onDive && (
-              <p className="text-[10px] text-cyan-200/85 mt-1 font-normal">
+              <p className="text-[9px] text-cyan-200/75 mt-0.5 font-normal">
                 {t.doubleTapExplore}
               </p>
             )}

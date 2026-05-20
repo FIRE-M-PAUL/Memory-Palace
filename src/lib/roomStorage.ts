@@ -55,6 +55,14 @@ export interface StoredChatMessage {
   role: "user" | "assistant";
   content: string;
   createdAt: string;
+  /** RAG metadata for human-in-the-loop feedback */
+  meta?: {
+    confidence?: number;
+    chunkIds?: string[];
+    conceptId?: string;
+    grounded?: boolean;
+    engine?: string;
+  };
 }
 
 export function getChatMessages(roomId: string): StoredChatMessage[] {

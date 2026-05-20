@@ -1,6 +1,6 @@
 "use client";
 
-import { Route, Lightbulb } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { KnowledgeRoom } from "@/types/memory-palace";
 import { getClusterColor } from "@/types/memory-palace";
@@ -11,6 +11,8 @@ interface MemoryRoutePanelProps {
   room: KnowledgeRoom;
   currentStep?: number;
   onStepClick?: (step: number) => void;
+  /** When false, hide copy about highlighting on the 3D map */
+  showMapHint?: boolean;
 }
 
 const STEP_LABELS = [
@@ -25,18 +27,17 @@ export function MemoryRoutePanel({
   room,
   currentStep = 0,
   onStepClick,
+  showMapHint = true,
 }: MemoryRoutePanelProps) {
   const { language, t } = useAppStore();
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Route className="h-5 w-5 text-cyan-400" />
-        <h3 className="font-semibold text-slate-100">{t.studyPath}</h3>
-      </div>
-      <p className="text-sm text-slate-500">
-        Follow these steps in order. Tap a step to see that idea on your map.
-      </p>
+      {showMapHint && (
+        <p className="text-sm text-slate-500">
+          Follow these steps in order. Tap a step to see that idea on your map.
+        </p>
+      )}
       <div className="space-y-3">
         {room.memoryRoute.map((step, i) => {
           const concept = room.concepts.find((c) => c.id === step.conceptId);
